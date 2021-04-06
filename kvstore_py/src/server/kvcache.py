@@ -5,7 +5,7 @@ class Node:
     def __init__(self, key, value):
         self.key = key
         self.value = value
-        self.prev = Node
+        self.prev = None
         self.next = None
     
 
@@ -20,34 +20,40 @@ class LRUcache:
         self.tail = None
         self.size = cacheSize
         self.curr_size = 0
-    
+
+    def updateLRUOrder(self, node):
+        lock.acquire()
+        self.remove(node)
+        self.setHead(node)
+        lock.release()  
+
     def get(self, key):
         if key not in self.hashmap:
             return -1
         node = self.hashmap[key]
         if self.head == node:
             return node.value
-        updateLRUOrder(node)
-        return node.Value
+        self.updateLRUOrder(node)
+        return node.value
 
         
     def put(self, key, value):
 
         lock.acquire()
-        if key in hashmap:
-            node = slef.hashmap[key]
+        if key in self.hashmap:
+            node = self.hashmap[key]
             node.value = value
             if self.head != node:
-                updateLRUOrder(node)
+                self.updateLRUOrder(node)
         else:
             new_node = Node(key, value)
             if self.curr_size == self.size:
-                remove(self.tail)
+                self.remove(self.tail)
             self.setHead(new_node)
             self.hashmap[key] = value
         lock.release()
 
-    def LRUOrder(self, node):
+    def updateLRUOrder(self, node):
         lock.acquire()
         self.remove(node)
         self.setHead(node)
@@ -76,7 +82,7 @@ class LRUcache:
     def setHead(self, node):
         if not self.head:
             self.head = node
-            send.end = node
+            self.end = node
         
         else:   
             node.next = self.head
@@ -87,4 +93,14 @@ class LRUcache:
         
 
     def del(self, key):
-        #Need to be completed
+        try : 
+            node = self.hashmap[key]
+            self.remove(node)
+            self.hashmap.pop(key)
+            self.curr_size +=1
+            return 0
+
+        except:
+            return -1
+
+
