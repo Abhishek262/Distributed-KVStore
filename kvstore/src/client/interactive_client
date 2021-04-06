@@ -45,7 +45,7 @@ if __name__ == "__main__":
         print("Type help() to get a list of commands.")
         while True:
             try:
-                command = str(raw_input(PROMPT))
+                command = str(input(PROMPT))
                 if command == "exit":
                     exit()
                 elif command == "help":
