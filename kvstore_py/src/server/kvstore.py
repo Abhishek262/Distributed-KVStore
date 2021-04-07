@@ -68,18 +68,21 @@ class KVStore():
 
         c = len(EntryFiles)
         # file = hashval + "-" + "."
-
+        # print("in")
         kvdict = {}
         kvdict[key] = value 
 
-        try : 
-            print(self.dirname+r"/" + hashval + "-" + c + ".entry")
-            with open(self.dirname+r"/" + hashval + "-" + c + ".entry",'w') as fobj : 
-                json.dump(kvdict,fobj)
-                
-            return 1
-        except : 
-            return -1
+        # try : 
+            # print("in")
+
+        print(self.dirname+"/" + str(hashval) + "-" + str(c) + ".entry")
+        with open(self.dirname+r"/" + str(hashval) + "-" + str(c) + ".entry",'w') as fobj : 
+            json.dump(kvdict,fobj)
+            
+        return 1
+        # except : 
+        #     print("ad")
+        #     return -1
 
     def KVStorePut(self,key,value) : 
         if(self.put_entry(key,value)) : 
