@@ -1,4 +1,5 @@
 from kvcacheset import KVCacheSet
+from kvstore import hash
 
 class KVCache : 
     def __init__(self,numCacheSets,cacheSetSize) : 
@@ -15,10 +16,10 @@ class KVCache :
         
     # Retrieves the cache set associated with a given KEY. The correct set can be
     # determined based on the hash of the KEY using the hash() function defined
-    # within kvstore.h. 
+    # within kvstore.py
     def getCacheSet(self,key):
-        #needs kvstore
-        pass 
+        index  =hash(key) % self.numCacheSets
+        return self.cacheSets[index]
 
     def KVCacheGet(self,key):
         cacheSet = self.getCacheSet(key)
@@ -41,5 +42,5 @@ class KVCache :
             print(x)
     
 
-# a = KVCache(10,10)
-# print(a)
+a = KVCache(10,10)
+print(a)
