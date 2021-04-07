@@ -4,7 +4,7 @@
 #include <string.h>
 #include "kvconstants.h"
 #include "kvcache.h"
-#include "kvstore.h"
+#include "kvstore.h" 
 
 /* Initializes KVCache CACHE. The cache will contains NUM_SETS KVCacheSets,
  * each containing up to ELEM_PER_SET entries. Returns 0 if successful, else a

@@ -1,106 +1,45 @@
-import threading
-lock = threading.lock()
+from kvcacheset import KVCacheSet
 
-class Node:
-    def __init__(self, key, value):
-        self.key = key
-        self.value = value
-        self.prev = None
-        self.next = None
+class KVCache : 
+    def __init__(self,numCacheSets,cacheSetSize) : 
+        if numCacheSets <= 0 or cacheSetSize <=0 :
+            raise ValueError("Size <= 0")
+
+        self.numCacheSets = numCacheSets
+        self.cacheSetSize = cacheSetSize
+        self.cacheSets = []
+
+        for i in range(numCacheSets):
+            tempCacheSet = KVCacheSet(cacheSetSize)
+            self.cacheSets.append(tempCacheSet)
+        
+    # Retrieves the cache set associated with a given KEY. The correct set can be
+    # determined based on the hash of the KEY using the hash() function defined
+    # within kvstore.h. 
+    def getCacheSet(self,key):
+        #needs kvstore
+        pass 
+
+    def KVCacheGet(self,key):
+        cacheSet = self.getCacheSet(key)
+        return cacheSet.get(key)
+
+
+    def KVCachePut(self,key,value): 
+        cacheSet = self.getCacheSet(key)
+        cacheSet.put(key,value)
+        
+
+    def KVCacheDelete(self,key):
+        cacheSet = self.getCacheSet(key)
+        cacheSet.delete(key)
+
+
+    #debug stuff
+    def __str__(self):
+        for x in self.cacheSets:
+            print(x)
     
 
-class LRUcache:
-    cache_limit = None
-
-    def __init__(self, cacheSize):
-        if cacheSize <= 0:
-            raise ValueError("Size <= 0")
-        self.hashmap = dict()
-        self.head = None
-        self.tail = None
-        self.size = cacheSize
-        self.curr_size = 0
-
-    def updateLRUOrder(self, node):
-        lock.acquire()
-        self.remove(node)
-        self.setHead(node)
-        lock.release()  
-
-    def get(self, key):
-        if key not in self.hashmap:
-            return -1
-        node = self.hashmap[key]
-        if self.head == node:
-            return node.value
-        self.updateLRUOrder(node)
-        return node.value
-
-        
-    def put(self, key, value):
-
-        lock.acquire()
-        if key in self.hashmap:
-            node = self.hashmap[key]
-            node.value = value
-            if self.head != node:
-                self.updateLRUOrder(node)
-        else:
-            new_node = Node(key, value)
-            if self.curr_size == self.size:
-                self.remove(self.tail)
-            self.setHead(new_node)
-            self.hashmap[key] = value
-        lock.release()
-
-    def updateLRUOrder(self, node):
-        lock.acquire()
-        self.remove(node)
-        self.setHead(node)
-        lock.release()
-
-    def remove(self, node):
-        if not self.head:   
-            return
-
-        if node.prev:
-            node.prev.next = node.next
-
-        if node.next:
-            node.next.prev = node.prev
-        
-        if (not node.prev) and (not node.next):
-            self.head = None
-            self.tail = None
-
-        if self.end == node:
-            self.end = node.prev
-            self.end.next = None
-        self.curr_size -= 1
-        return node
-
-    def setHead(self, node):
-        if not self.head:
-            self.head = node
-            self.end = node
-        
-        else:   
-            node.next = self.head
-            self.head.prev = node
-            self.head = node
-
-        self.curr_size += 1 
-        
-
-    def del(self, key):
-        try : 
-            node = self.hashmap[key]
-            self.remove(node)
-            self.hashmap.pop(key)
-            self.curr_size +=1
-            return 0
-
-        except:
-            return -1
-
-
+# a = KVCache(10,10)
+# print(a)

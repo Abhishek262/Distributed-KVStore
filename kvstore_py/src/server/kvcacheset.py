@@ -59,7 +59,6 @@ class KVCacheSet:
                 self.remove(self.tail)
             self.setHead(new_node)
             self.hashmap[key] = new_node
-            self.curr_size+=1
         lock.release()
 
     def updateLRUOrder(self, node):
@@ -85,7 +84,6 @@ class KVCacheSet:
         if self.end == node:
             self.end = node.prev
             self.end.next = None
-        self.curr_size -= 1
         return node
 
     def setHead(self, node):
