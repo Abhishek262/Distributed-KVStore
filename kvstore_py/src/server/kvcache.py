@@ -23,7 +23,7 @@ class KVCache :
 
     def KVCacheGet(self,key):
         cacheSet = self.getCacheSet(key)
-        return cacheSet
+        return cacheSet.get(key)
 
 
     def KVCachePut(self,key,value): 

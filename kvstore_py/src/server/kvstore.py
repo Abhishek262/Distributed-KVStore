@@ -1,5 +1,6 @@
 import json 
-from os import mkdir 
+import pathlib
+from os import mkdir
 from os import listdir
 from os.path import isfile, join
 
@@ -13,8 +14,11 @@ def hash(string) :
 
 class KVStore():
     def __init__(self,dirname):
+
+        pathlib.Path('storage').mkdir(parents=True, exist_ok=True) 
         self.dirname = r"storage/" + dirname 
-        mkdir(self.dirname)
+        pathlib.Path(self.dirname).mkdir(parents=True, exist_ok=True) 
+
 
     #file location  : hash(key)-returnval.entry
     #returns val containing hash chain number
@@ -52,17 +56,40 @@ class KVStore():
         else:
             return -1
 
-
+    #file location  : hash(key)-returnval.entry
+    #returns 1 if successful
     def put_entry(self,key,value) : 
         hashval = hash(key)
         AllEntryFiles = [f for f in listdir(self.dirname) if isfile(join(self.dirname, f))]
         EntryFiles = []
         for file in AllEntryFiles : 
             if str(hashval) in file : 
-                EntryFiles.append(file)      
+                EntryFiles.append(file)    
 
+        c = len(EntryFiles)
+        # file = hashval + "-" + "."
 
-a = KVStore("yes")
+        kvdict = {}
+        kvdict[key] = value 
 
+        try : 
+            print(self.dirname+r"/" + hashval + "-" + c + ".entry")
+            with open(self.dirname+r"/" + hashval + "-" + c + ".entry",'w') as fobj : 
+                json.dump(kvdict,fobj)
+                
+            return 1
+        except : 
+            return -1
 
+    def KVStorePut(self,key,value) : 
+        if(self.put_entry(key,value)) : 
+            print("key inserted")
+        else : 
+            print("Error during put")
 
+    def KVStoredel(self,key) : 
+        hash
+
+a = KVStore("dir")
+a.KVStorePut("ab","abcd")
+# a.KV
