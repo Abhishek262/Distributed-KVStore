@@ -110,6 +110,11 @@ class KVCacheSet:
         except:
             return -1
 
+    def printCacheElements(self):
+        for kh,vh in self.hashmap.items():
+            print("K:",kh, " V: ",vh.value)
+
 # a = KVCacheSet(10)
 # a.put("ad",10)
 # print(a.get("ad"))
+# a.printCacheElements()

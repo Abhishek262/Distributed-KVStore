@@ -23,7 +23,7 @@ class KVCache :
 
     def KVCacheGet(self,key):
         cacheSet = self.getCacheSet(key)
-        return cacheSet.get(key)
+        return cacheSet
 
 
     def KVCachePut(self,key,value): 
@@ -41,6 +41,3 @@ class KVCache :
         for x in self.cacheSets:
             print(x)
     
-
-a = KVCache(10,10)
-print(a)
