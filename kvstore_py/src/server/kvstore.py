@@ -1,5 +1,6 @@
 import json 
 import pathlib
+import os
 from os import mkdir
 from os import listdir
 from os.path import isfile, join
@@ -27,24 +28,24 @@ class KVStore():
     def find_entry(self,key) : 
         hashval = hash(key)
 
-        # try : /
-        AllEntryFiles = [f for f in listdir(self.dirname) if isfile(join(self.dirname, f))]
-        EntryFiles = []
-        for file in AllEntryFiles : 
-            if str(hashval) in file : 
-                EntryFiles.append(file)
+        try : 
+            AllEntryFiles = [f for f in listdir(self.dirname) if isfile(join(self.dirname, f))]
+            EntryFiles = []
+            for file in AllEntryFiles : 
+                if str(hashval) in file : 
+                    EntryFiles.append(file)
 
-        for file in EntryFiles : 
-            print(file)
+            for file in EntryFiles : 
+                print(file)
+                with open( self.dirname +"/" +  file,'r') as fobj : 
+                    temp_dict =  json.load(fobj)
+                if(key in temp_dict.keys()):
+                    return tuple([int(file.split("-")[1].split(".")[0]),temp_dict[key],file])
+            
+            return tuple([-1,"Not Found"]) 
 
-            temp_dict =  json.loads(file)
-            if(key in temp_dict.keys()):
-                return tuple([file.split("-")[1].split(".")[0],temp_dict[key],file])
-        
-        return tuple([-1,"Not Found"]) 
-
-        # except : 
-        #     return -1
+        except : 
+            return -1
 
     def contains_key(self,key) : 
         return self.find_entry(key)[0]>=0
@@ -71,21 +72,17 @@ class KVStore():
         kvdict = {}
         kvdict[key] = value 
 
-        # try : 
-            # print("in")
-        # existingKey = self.find_entry(key)
-        # if(existingKey[0] !=-1):
-        #     with open(file,'w') as fobj:
-        #         json.dump(list(kvdict),fobj)
+        existingKey = self.find_entry(key)
+        fname  =self.dirname + "/" + str(hashval) + "-" + str(existingKey[0]) + ".entry"
+        if(existingKey[0] !=-1):
+            with open(fname,'w') as fobj:
+                json.dump(kvdict,fobj)
             
-        # else:
-        with open(self.dirname+r"/" + str(hashval) + "-" + str(c) + ".entry",'w') as fobj : 
-            json.dump(kvdict,fobj)
+        else:
+            with open(self.dirname+r"/" + str(hashval) + "-" + str(c) + ".entry",'w') as fobj : 
+                json.dump(kvdict,fobj)
             
         return 1
-        # except : 
-        #     print("ad")
-        #     return -1
 
     def KVStorePut(self,key,value) : 
         if(self.put_entry(key,value)) : 
@@ -93,9 +90,24 @@ class KVStore():
         else : 
             print("Error during put")
 
-    def KVStoredel(self,key) : 
-        hash
+    #returns 1 if succesful, else returns -1
+    def KVStoreDelete(self,key) : 
+        hashval = hash(key)
+        ret = self.find_entry(key)
+
+        try : 
+            if(ret[0]!=-1) : 
+                fname  =self.dirname + "/" + str(hashval) + "-" + str(ret[0]) + ".entry"
+                os.remove(fname)
+                return 1
+        
+        except : 
+            return -1
+        
+        return -1
+
 
 a = KVStore("dir")
-a.KVStorePut("ab","fa")
-print(a.KVStoreGet("ab"))
+# a.KVStorePut("ab","hjhjhj")
+# print(a.KVStoreGet("ab"))
+print(a.KVStoreDelete("abh"))
