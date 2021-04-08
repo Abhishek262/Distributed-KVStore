@@ -22,7 +22,7 @@ class KVStore():
 
     #file location  : hash(key)-returnval.entry
     #returns val containing hash chain number
-    #returns a tuple with (chain_no,value) if successful, (-1) or else
+    #returns a tuple with (chain_no,value,file_name) if successful, (-1) or else
 
     def find_entry(self,key) : 
         hashval = hash(key)
@@ -35,12 +35,13 @@ class KVStore():
                 EntryFiles.append(file)
 
         for file in EntryFiles : 
-            
+            print(file)
+
             temp_dict =  json.loads(file)
             if(key in temp_dict.keys()):
-                return tuple(file.split("-")[1].split(".")[0],temp_dict[key])
+                return tuple([file.split("-")[1].split(".")[0],temp_dict[key],file])
         
-        return tuple(-1,"Not Found") 
+        return tuple([-1,"Not Found"]) 
 
         # except : 
         #     return -1
@@ -67,15 +68,17 @@ class KVStore():
                 EntryFiles.append(file)    
 
         c = len(EntryFiles)
-        # file = hashval + "-" + "."
-        # print("in")
         kvdict = {}
         kvdict[key] = value 
 
         # try : 
             # print("in")
-
-        print(self.dirname+"/" + str(hashval) + "-" + str(c) + ".entry")
+        # existingKey = self.find_entry(key)
+        # if(existingKey[0] !=-1):
+        #     with open(file,'w') as fobj:
+        #         json.dump(list(kvdict),fobj)
+            
+        # else:
         with open(self.dirname+r"/" + str(hashval) + "-" + str(c) + ".entry",'w') as fobj : 
             json.dump(kvdict,fobj)
             
@@ -94,5 +97,5 @@ class KVStore():
         hash
 
 a = KVStore("dir")
-a.KVStorePut("ab","abcd")
-# a.KV
+a.KVStorePut("ab","fa")
+print(a.KVStoreGet("ab"))
