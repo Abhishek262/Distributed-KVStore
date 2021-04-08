@@ -106,8 +106,21 @@ class KVStore():
         
         return -1
 
+    #returns 1 if succesful, -1 if an error occurs
+    def KVStoreClean(self) : 
+
+        try : 
+            filelist = [ f for f in os.listdir(self.dirname)]
+            for f in filelist:
+                os.remove(os.path.join(self.dirname, f))
+            os.rmdir(self.dirname)
+            return 1
+        except : 
+            return -1
+
 
 a = KVStore("dir")
-# a.KVStorePut("ab","hjhjhj")
+a.KVStorePut("ab","hjhjhj")
 # print(a.KVStoreGet("ab"))
-print(a.KVStoreDelete("abh"))
+# print(a.KVStoreDelete("abh"))
+a.KVStoreClean()

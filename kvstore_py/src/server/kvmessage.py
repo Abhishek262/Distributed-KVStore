@@ -30,7 +30,7 @@ class KVMessage:
     def readblob(self, sock_obj, size):
         buf = ""
         while len(buf) != size:
-            ret = sock.recv(size - len(buf))
+            ret = sock_obj.recv(size - len(buf))
             if not ret:
                 raise Exception("Socket Closed")
             buf += ret
@@ -38,8 +38,8 @@ class KVMessage:
 
     def kvMessageParse(self, sock_obj): #not sure but s here is socket object
         datasize = struct.calcsize("L")
-        size = struct.unpack("L", readblob(sock_obj, datsize))
-        data = readblob(sock_obj, size)
+        size = struct.unpack("L", self.readblob(sock_obj, datasize))
+        data = self.readblob(sock_obj, size)
         temp_dict = json.loads(data.decode('utf-8'))
         
         if "key" in temp_dict.keys():
