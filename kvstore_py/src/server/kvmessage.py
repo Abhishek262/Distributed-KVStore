@@ -8,14 +8,24 @@ typedef struct {
 '''
 
 import json
+import struct
 
 class KVMessage:
 
-    def __init__(self, msgType, message):
-            self.msgType = msgType
-            self.message = message
-            self.key = key
-            self.value = value 
+    def __init__(self, msgType, paramList = {}):
+        self.msgType = msgType
+        if "message" in paramList.keys():
+            self.message = paramList["message"]
+        else:
+            self.message = ""
+        if "key" in paramList.keys():
+            self.key = paramList["key"]
+        else:
+            self.key = ""
+        if "value" in paramList.keys():
+            self.value = paramList["value"]
+        else:
+            self.value = ""
 
     def readblob(self, sock_obj, size):
         buf = ""
@@ -30,7 +40,7 @@ class KVMessage:
         datasize = struct.calcsize("L")
         size = struct.unpack("L", readblob(sock_obj, datsize))
         data = readblob(sock_obj, size)
-        temp_dict = json.load(data)
+        temp_dict = json.loads(data.decode('utf-8'))
         
         if "key" in temp_dict.keys():
             self.key = temp_dict["key"]
@@ -48,17 +58,28 @@ class KVMessage:
     def kvMessageSend(self, sock_obj):
         sent = 0
         temp_dict = dict()
-        temp_dict["type"] = this.msgType
-        if "key" in temp_dict.keys():
+        temp_dict["type"] = self.msgType
+        datasize = struct.calcsize("L")
+
+        if self.key != "":
+            temp_dict["key"] = self.key
+
+        if self.value != "":
+            temp_dict["value"] = self.value
+        
+        if self.message != "":
+            temp_dict["message"] = self.message
+        
+        '''if "key" in temp_dict.keys():
             temp_dict["key"] = self.key
         if "value" in temp_dict.keys():
             temp_dict["value"] = self.value
         if "message" in temp_dict.keys():
-            temp_dict["message"] = self.message
+            temp_dict["message"] = self.message'''
         
-        jdata = json.dumps(temp_dict)
+        
+        jdata = json.dumps(temp_dict.encode('utf-8'))
         sock_obj.sendall(struct.pack("L", len(jdata)))
         sock_obj.sendall(jdata)
-        return 4+len(jdata)
+        return datasize+len(jdata)
 
-    #def kvMessageFree(self):
