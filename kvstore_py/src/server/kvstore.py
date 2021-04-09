@@ -14,6 +14,9 @@ def hash(string) :
   return hash
 
 class KVStore():
+    maxKeyLength = 128
+    maxValueLength = 512
+
     def __init__(self,dirname):
 
         pathlib.Path('storage').mkdir(parents=True, exist_ok=True) 
@@ -34,6 +37,9 @@ class KVStore():
             for file in AllEntryFiles : 
                 if str(hashval) in file : 
                     EntryFiles.append(file)
+                
+            if(len(EntryFiles) == 0):
+                return tuple([-1,"Not Found"]) 
 
             for file in EntryFiles : 
                 print(file)
@@ -57,6 +63,35 @@ class KVStore():
             return ret[1]
         else:
             return -1
+
+    #return 1 if ok, -1 if keylength is greater, -2 if  directory does not exist, -3 if key does not exist
+    def KVStoreDelCheck(self,key) : 
+        if(len(str(key)) > KVStore.maxKeyLength) : 
+            return -1
+        if(os.path.isdir(self.dirname)==False) : 
+            return -2
+        hashval = hash(key)
+        AllEntryFiles = [f for f in listdir(self.dirname) if isfile(join(self.dirname, f))]
+        exists = False
+        for file in AllEntryFiles : 
+            if str(hashval) in file : 
+                exists = True 
+        
+        if(exists == True) : 
+            return 1
+        else : 
+            return -3        
+
+    #return 1 if ok, -1 if keylength is greater, -2 if  directory does not exist, -3 if value length exceeds max size
+    def KVStorePutCheck(self,key,value) : 
+        if(len(str(key)) > KVStore.maxKeyLength) : 
+            return -1
+        if(os.path.isdir(self.dirname)==False) : 
+            return -2
+        if(len(str(value)) > KVStore.maxValueLength) : 
+            return -3
+
+        return 1
 
     #file location  : hash(key)-returnval.entry
     #returns 1 if successful
@@ -85,15 +120,24 @@ class KVStore():
         return 1
 
     def KVStorePut(self,key,value) : 
+
+        if(self.KVStorePutCheck(key,value) == False) : 
+            return -1
+
         if(self.put_entry(key,value)) : 
             print("key inserted")
+            return 1
         else : 
             print("Error during put")
+            return -1
 
     #returns 1 if succesful, else returns -1
     def KVStoreDelete(self,key) : 
         hashval = hash(key)
         ret = self.find_entry(key)
+
+        if(self.KVStoreDelCheck(key) == False) : 
+            return -1
 
         try : 
             if(ret[0]!=-1) : 
@@ -119,8 +163,9 @@ class KVStore():
             return -1
 
 
-a = KVStore("dir")
-a.KVStorePut("ab","hjhjhj")
+
+# a = KVStore("dir")
+# a.KVStorePut("ab","hjhjhj")
 # print(a.KVStoreGet("ab"))
-# print(a.KVStoreDelete("abh"))
-a.KVStoreClean()
+# print(a.KVStoreDelete("ab"))
+# a.KVStoreClean()
