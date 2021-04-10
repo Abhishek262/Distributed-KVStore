@@ -11,6 +11,7 @@ class WorkQueue:
     def pop(self):
         new_item = self.queue.get()
         return new_item
+
 b = WorkQueue()
 b.push("a")
 print(b.pop())
