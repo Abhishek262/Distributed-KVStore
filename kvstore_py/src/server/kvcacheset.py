@@ -1,6 +1,5 @@
 
 import threading
-lock = threading.Lock()
 
 class Node:
     def __init__(self, key, value):
@@ -21,6 +20,7 @@ class KVCacheSet:
         self.tail = None
         self.size = cacheSize
         self.curr_size = 0
+        self.lock = threading.Lock()
 
     def updateLRUOrder(self, node):
         lock.acquire()
@@ -30,7 +30,7 @@ class KVCacheSet:
         
 
     def get(self, key):
-        # print("IN")
+        #Locking done by slave server or tpc master
         if key not in self.hashmap:
             print("sf")
             return -1
@@ -47,7 +47,7 @@ class KVCacheSet:
         
     def put(self, key, value):
 
-        lock.acquire()
+        self.lock.acquire()
         if key in self.hashmap:
             node = self.hashmap[key]
             node.value = value
@@ -59,7 +59,7 @@ class KVCacheSet:
                 self.remove(self.tail)
             self.setHead(new_node)
             self.hashmap[key] = new_node
-        lock.release()
+        self.lock.release()
 
     def updateLRUOrder(self, node):
         lock.acquire()
@@ -114,7 +114,7 @@ class KVCacheSet:
         for kh,vh in self.hashmap.items():
             print("K:",kh, " V: ",vh.value)
 
-# a = KVCacheSet(10)
-# a.put("ad",10)
+#a = KVCacheSet(10)
+#a.put("ad",10)
 # print(a.get("ad"))
 # a.printCacheElements()

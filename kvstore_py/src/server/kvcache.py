@@ -2,6 +2,7 @@ from kvcacheset import KVCacheSet
 from kvstore import hash
 
 class KVCache : 
+    maxKeyLength = 128
     def __init__(self,numCacheSets,cacheSetSize) : 
         if numCacheSets <= 0 or cacheSetSize <=0 :
             raise ValueError("Size <= 0")
@@ -35,9 +36,21 @@ class KVCache :
         cacheSet = self.getCacheSet(key)
         cacheSet.delete(key)
 
+    def KVCacheGetLock(self,key):
+        if(len(key) > KVCache.maxKeyLength):
+            return None
+        return self.getCacheSet(key).lock
 
     #debug stuff
     def __str__(self):
         for x in self.cacheSets:
             print(x)
-    
+
+'''   
+a = KVCache(2,1)
+a.KVCachePut("ad",10)
+b = a.KVCacheGet("ad")
+print(b)
+c = a.KVCacheGetLock("ad")
+print(c)
+'''
