@@ -32,8 +32,8 @@ class KVCacheSet:
     def get(self, key):
         #Locking done by slave server or tpc master
         if key not in self.hashmap:
-            print("sf")
-            return -1
+            #print("sf")
+            return None
         node = self.hashmap[key]
         # print(node)
         # print(self.head)
@@ -60,6 +60,7 @@ class KVCacheSet:
             self.setHead(new_node)
             self.hashmap[key] = new_node
         self.lock.release()
+        
 
     def updateLRUOrder(self, node):
         lock.acquire()

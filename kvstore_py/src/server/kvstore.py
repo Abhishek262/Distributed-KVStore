@@ -62,7 +62,7 @@ class KVStore():
         if(ret[0]>=0) : 
             return ret[1]
         else:
-            return -1
+            return None
 
     #return 1 if ok, -1 if keylength is greater, -2 if  directory does not exist, -3 if key does not exist
     def KVStoreDelCheck(self,key) : 
