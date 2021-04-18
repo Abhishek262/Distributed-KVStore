@@ -15,6 +15,7 @@ class KVServer :
         self.maxThreads = maxThreads 
         self.listening = True 
         self.state = ErrorCodes.TPCStates["TPC_READY"]
+        self.useTPC = useTPC
         #self.TPClog = TPClog(dirname)
         #self.message = message
         #self.phase = phase 
@@ -131,16 +132,15 @@ class KVServer :
         
         return respmsg
 
+    def KVServerHandle(self, sock_obj):  
+        messageobj = KVMessage()  
+        reqmsg = messageobj.KVMessageParse(sock_obj)
+        #Maybe Error Handling maybe null
+        if self.useTPC is False:
+            self.KVServerHandleNoTPC(reqmsg)
+        '''
+        else:
+            self.KVServerHandleTPC(reqmsg)
+        '''
+        messageobj.kvMessageSend(sock_obj)
 
-
-
-
-
-
-
-
-        
-
-
-
-        

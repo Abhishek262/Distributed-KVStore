@@ -3,7 +3,7 @@ import struct
 
 class KVMessage:
 
-    def __init__(self, msgType, paramList = {}):
+    def __init__(self, msgType = -1, paramList = {}):
         self.msgType = msgType
         if "message" in paramList.keys():
             self.message = paramList["message"]
