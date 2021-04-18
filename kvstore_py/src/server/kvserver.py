@@ -13,7 +13,7 @@ class KVServer :
         self.listening = True 
         #self.TPClog = TPClog(dirname)
         #self.message = message
-        #self.phase = phase
+        #self.phase = phase 
 
     def get(self,key) : 
         lock = self.cache.KVCacheGetLock(key)
@@ -22,14 +22,15 @@ class KVServer :
         lock.acquire()
         val = self.cache.KVCacheGet(key)
         if val is not None:
+            lock.release()
             return val 
         lock.release()
 
         val = self.store.KVStoreGet(key)
-        if val is not None:
+        if val[0]<0 :
             return val
         lock.acquire()
-        self.cache.KVCachePut(key,val)
+        self.cache.KVCachePut(key,val[1])
         lock.release()
         #check put() in kvcacheset
 

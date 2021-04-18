@@ -4,6 +4,8 @@ import os
 from os import mkdir
 from os import listdir
 from os.path import isfile, join
+from readerwriterlock import rwlock
+
 
 def hash(string) :
   hash = 5381;
@@ -22,54 +24,60 @@ class KVStore():
         pathlib.Path('storage').mkdir(parents=True, exist_ok=True) 
         self.dirname = r"storage/" + dirname 
         pathlib.Path(self.dirname).mkdir(parents=True, exist_ok=True) 
-
+        self.lock = rwlock.RWLockFairD()
 
     #file location  : hash(key)-returnval.entry
     #returns val containing hash chain number
-    #returns a tuple with (chain_no,value,file_name) if successful, (-1) or else
+    #returns a tuple with (chain_no,value,file_name) if successful, 
 
     def find_entry(self,key) : 
         hashval = hash(key)
+        notFound = False
 
         try : 
-            AllEntryFiles = [f for f in listdir(self.dirname) if isfile(join(self.dirname, f))]
-            EntryFiles = []
-            for file in AllEntryFiles : 
-                if str(hashval) in file : 
-                    EntryFiles.append(file)
-                
-            if(len(EntryFiles) == 0):
-                return tuple([-1,"Not Found"]) 
+            with self.lock.gen_rlock():
 
-            for file in EntryFiles : 
-                print(file)
-                with open( self.dirname +"/" +  file,'r') as fobj : 
-                    temp_dict =  json.load(fobj)
-                if(key in temp_dict.keys()):
-                    return tuple([int(file.split("-")[1].split(".")[0]),temp_dict[key],file])
+                AllEntryFiles = [f for f in listdir(self.dirname) if isfile(join(self.dirname, f))]
+                EntryFiles = []
+                for file in AllEntryFiles : 
+                    if str(hashval) in file : 
+                        EntryFiles.append(file)
+                    
+                if(len(EntryFiles) == 0):
+                    notFound = True
+
+                if(notFound==False):
+                    for file in EntryFiles : 
+                        print(file)
+
+                        with open( self.dirname +"/" +  file,'r') as fobj : 
+                            temp_dict =  json.load(fobj)
+                        if(key in temp_dict.keys()):
+                            return tuple([int(file.split("-")[1].split(".")[0]),temp_dict[key],file])
             
-            return tuple([-1,"Not Found"]) 
+
+            return tuple([-42,"Not Found"]) 
 
         except : 
-            return -1
-
+            print("Error in find_entry")
+            return tuple([-12,"File Error"]) 
+            
     def contains_key(self,key) : 
         return self.find_entry(key)[0]>=0
 
-    #returns value or -1
     def KVStoreGet(self,key) : 
         ret = self.find_entry(key)
         if(ret[0]>=0) : 
-            return ret[1]
+            return tuple([0,ret[1]])
         else:
-            return None
+            return ret
 
     #return 1 if ok, -1 if keylength is greater, -2 if  directory does not exist, -3 if key does not exist
     def KVStoreDelCheck(self,key) : 
         if(len(str(key)) > KVStore.maxKeyLength) : 
-            return -1
+            return -11
         if(os.path.isdir(self.dirname)==False) : 
-            return -2
+            return -42
         hashval = hash(key)
         AllEntryFiles = [f for f in listdir(self.dirname) if isfile(join(self.dirname, f))]
         exists = False
@@ -80,16 +88,16 @@ class KVStore():
         if(exists == True) : 
             return 1
         else : 
-            return -3        
+            return -42        
 
     #return 1 if ok, -1 if keylength is greater, -2 if  directory does not exist, -3 if value length exceeds max size
     def KVStorePutCheck(self,key,value) : 
         if(len(str(key)) > KVStore.maxKeyLength) : 
-            return -1
+            return -11
         if(os.path.isdir(self.dirname)==False) : 
-            return -2
+            return -12
         if(len(str(value)) > KVStore.maxValueLength) : 
-            return -3
+            return -10
 
         return 1
 
@@ -97,32 +105,34 @@ class KVStore():
     #returns 1 if successful
     def put_entry(self,key,value) : 
         hashval = hash(key)
-        AllEntryFiles = [f for f in listdir(self.dirname) if isfile(join(self.dirname, f))]
-        EntryFiles = []
-        for file in AllEntryFiles : 
-            if str(hashval) in file : 
-                EntryFiles.append(file)    
 
-        c = len(EntryFiles)
-        kvdict = {}
-        kvdict[key] = value 
+        with self.lock.gen_wlock():
+            AllEntryFiles = [f for f in listdir(self.dirname) if isfile(join(self.dirname, f))]
+            EntryFiles = []
+            for file in AllEntryFiles : 
+                if str(hashval) in file : 
+                    EntryFiles.append(file)    
 
-        existingKey = self.find_entry(key)
-        fname  =self.dirname + "/" + str(hashval) + "-" + str(existingKey[0]) + ".entry"
-        if(existingKey[0] !=-1):
-            with open(fname,'w') as fobj:
-                json.dump(kvdict,fobj)
-            
-        else:
-            with open(self.dirname+r"/" + str(hashval) + "-" + str(c) + ".entry",'w') as fobj : 
-                json.dump(kvdict,fobj)
+            c = len(EntryFiles)
+            kvdict = {}
+            kvdict[key] = value 
+
+            existingKey = self.find_entry(key)
+            fname  =self.dirname + "/" + str(hashval) + "-" + str(existingKey[0]) + ".entry"
+            if(existingKey[0] !=-1):
+                with open(fname,'w') as fobj:
+                    json.dump(kvdict,fobj)
+                
+            else:
+                with open(self.dirname+r"/" + str(hashval) + "-" + str(c) + ".entry",'w') as fobj : 
+                    json.dump(kvdict,fobj)
             
         return 1
 
     def KVStorePut(self,key,value) : 
-
-        if(self.KVStorePutCheck(key,value) == False) : 
-            return -1
+        ret = self.KVStorePutCheck(key,value)
+        if( ret <0) : 
+            return ret
 
         if(self.put_entry(key,value)) : 
             print("key inserted")
@@ -136,20 +146,27 @@ class KVStore():
         hashval = hash(key)
         ret = self.find_entry(key)
 
-        if(self.KVStoreDelCheck(key) == False) : 
-            return -1
-
         try : 
-            if(ret[0]!=-1) : 
-                fname  =self.dirname + "/" + str(hashval) + "-" + str(ret[0]) + ".entry"
-                os.remove(fname)
-                return 1
+            with self.lock.gen_wlock:
+
+                delCheck = True
+                del_ret = 0
+                del_ret = self.KVStoreDelCheck(key)
+                if(del_ret<0) : 
+                    delCheck = False
+
+                if(ret[0]!=-1 and delCheck) : 
+                    fname  =self.dirname + "/" + str(hashval) + "-" + str(ret[0]) + ".entry"
+                    os.remove(fname)
+
+            if(delCheck == False):
+                return del_ret
+
+            return 1
         
         except : 
-            return -1
+            return -12
         
-        return -1
-
     #returns 1 if succesful, -1 if an error occurs
     def KVStoreClean(self) : 
 
