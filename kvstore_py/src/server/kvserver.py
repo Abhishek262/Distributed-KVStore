@@ -1,6 +1,7 @@
 from kvcache import KVCache
 from kvstore import KVStore
 from kvconstants import ErrorCodes
+from kvmessage import KVMessage
 import threading
 import time
 
@@ -13,6 +14,7 @@ class KVServer :
         self.port = port 
         self.maxThreads = maxThreads 
         self.listening = True 
+        self.state = ErrorCodes.TPCStates["TPC_READY"]
         #self.TPClog = TPClog(dirname)
         #self.message = message
         #self.phase = phase 
@@ -23,7 +25,7 @@ class KVServer :
             return ErrorCodes.errkeylen
         lock.acquire()
         val = self.cache.KVCacheGet(key)
-        if val is not None:
+        if val[0] >= 0:
             lock.release()
             return val 
         lock.release()
@@ -45,7 +47,7 @@ class KVServer :
         lock.acquire()
         succ = self.cache.KVCachePut(key,value)
 
-        if(succ<0):
+        if(succ < 0):
             lock.release()
             return succ 
         
@@ -64,7 +66,7 @@ class KVServer :
 
         ret  = self.store.KVStoreDelete()
 
-        if(ret <0):
+        if(ret < 0):
             return ret 
         
         lock.acquire()
@@ -77,9 +79,57 @@ class KVServer :
         localtime = time.asctime( time.localtime(time.time()) )
         return localtime +" "+ self.hostname +" "+ self.port
     
-    def KVServerHandleNoTPC(self):
+    def KVServerHandleNoTPC(self, reqmsg):
+        error = -1
+        respmsg = KVMessage()
+        default = ErrorCodes.getErrorMessage(ErrorCodes.InvalidRequest)
+        if(reqmsg.key == ""):
+            if(reqmsg.msgType == ErrorCodes.kvMessageType["GETREQ"] or reqmsg.msgType == ErrorCodes.kvMessageType["PUTREQ"] or reqmsg.msgType == ErrorCodes.kvMessageType["DELREQ"]):
+                respmsg.msgType = "RESP"
+                respmsg.message = default
         
+        elif(reqmsg.value == "" and reqmsg.msgType ==  ErrorCodes.kvMessageType["PUTREQ"]):
+            respmsg.msgType = "RESP"
+            respmsg.message = default
 
+        #if(self.state == ErrorCodes.TPCStates["TPC_READY"]):
+
+        elif(reqmsg.msgType == ErrorCodes.kvMessageType["GETREQ"]):
+            ret = self.KVServerGet(reqmsg.key)
+            if (ret[0] >= 0):
+                respmsg.msgType = ErrorCodes.kvMessageType["GETRESP"]
+                respmsg.key = reqmsg.key
+                respmsg.value = ret[1]
+            else:
+                respmsg.msgType = "RESP"
+                respmsg.message = ErrorCodes.getErrorMessage(ret[0])
+            
+        elif(reqmsg.msgType == ErrorCodes.kvMessageType["PUTREQ"]):
+            ret = self.KVServerPut(reqmsg.key)
+            if (ret >= 0):
+                respmsg.msgType = "RESP"
+                respmsg.value = ErrorCodes.Successmsg
+            else:
+                respmsg.msgType = "RESP"
+                respmsg.message = ErrorCodes.getErrorMessage(ret)
+
+        elif(reqmsg.msgType == ErrorCodes.kvMessageType["DELREQ"]):
+            ret = self.KVServerDelete(reqmsg.key)
+            if (ret >= 0):
+                respmsg.msgType = "RESP"
+                respmsg.value = ErrorCodes.Success
+            else:
+                respmsg.msgType = "RESP"
+                respmsg.message = ErrorCodes.getErrorMessage(ret)
+            
+        elif(reqmsg.msgType == ErrorCodes.kvMessageType["INFO"]):
+            respmsg.msgType = ErrorCodes.kvMessageType["INFO"]
+            respmsg.message = self.KVServerGetInfoMessage()
+        else:
+            respmsg.msgType = "RESP"
+            respmsg.message = ErrorCodes.notImplementedMessage
+        
+        return respmsg
 
 
 

@@ -27,8 +27,11 @@ class KVCache :
 
     def KVCacheGet(self,key):
         cacheSet = self.getCacheSet(key)
-        return cacheSet.get(key)
-
+        val =  cacheSet.get(key)
+        if val is None:
+            return tuple([-42,"Not Found"]) 
+        else:
+            return tuple([1, val])
 
     def KVCachePut(self,key,value): 
         if(len(key) > KVCache.maxKeyLength):

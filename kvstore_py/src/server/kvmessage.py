@@ -1,12 +1,3 @@
-'''
-typedef struct {
-  msgtype_t type;    /* The type of this message. */
-  char *key;         /* The key this message stores. May be NULL, depending on type. */
-  char *value;       /* The value this message stores. May be NULL, depending on type. */
-  char *message;     /* The message this message stores. May be NULL, depending on type. */
-} kvmessage_t;
-'''
-
 import json
 import struct
 
