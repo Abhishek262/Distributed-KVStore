@@ -74,7 +74,10 @@ class KVServer :
         return 1 
 
     def KVServerGetInfoMessage(self):
-        return time.localtime() +" "+ self.hostname +" "+ self.port
+        localtime = time.asctime( time.localtime(time.time()) )
+        return localtime +" "+ self.hostname +" "+ self.port
+    
+    def KVServerHandleNoTPC(self):
         
 
 
