@@ -22,12 +22,6 @@ class KVCacheSet:
         self.curr_size = 0
         self.lock = threading.Lock()
 
-    def updateLRUOrder(self, node):
-        lock.acquire()
-        self.remove(node)
-        self.setHead(node)
-        lock.release()  
-        
 
     def get(self, key):
         #Locking done by slave server or tpc master
@@ -47,7 +41,7 @@ class KVCacheSet:
         
     def put(self, key, value):
 
-        self.lock.acquire()
+        # self.lock.acquire()
         if key in self.hashmap:
             node = self.hashmap[key]
             node.value = value
@@ -59,14 +53,14 @@ class KVCacheSet:
                 self.remove(self.tail)
             self.setHead(new_node)
             self.hashmap[key] = new_node
-        self.lock.release()
+        # self.lock.release()
         
 
     def updateLRUOrder(self, node):
-        lock.acquire()
+        # self.lock.acquire()
         self.remove(node)
         self.setHead(node)
-        lock.release()
+        # self.lock.release()
 
     def remove(self, node):
         if not self.head:   

@@ -67,7 +67,7 @@ class KVStore():
     def KVStoreGet(self,key) : 
         ret = self.find_entry(key)
         if(ret[0]>=0) : 
-            return tuple([0,ret[1]])
+            return tuple([1,ret[1]])
         else:
             return ret
 
