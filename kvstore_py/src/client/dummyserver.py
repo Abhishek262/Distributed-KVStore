@@ -1,8 +1,4 @@
-######################################################################
-# THIS FILE IS A USEFUL HARNESS TO TEST AND UNDERSTAND THE BEHAVIORS #
-# OF THE PROVIDED CLIENTS. FEEL FREE TO EDIT IT AS YOU WISH. IT WILL #
-#              BE CONSIDERED AS PART OF YOUR SUBMISSION              #
-######################################################################
+
 
 from client import *
 import socket, time

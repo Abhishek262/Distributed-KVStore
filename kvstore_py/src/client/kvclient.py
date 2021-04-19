@@ -1,9 +1,6 @@
 import json, socket
 import struct
 
-#############
-# CONSTANTS #
-#############
 
 # Used for KVMessage types and messages
 GET_REQ = 0
@@ -32,19 +29,9 @@ ERRORS = {
 }
 
 
-###########
-# CLASSES #
-###########
 
 class KVClient:
-    """
-    This is a client configured to interface with our key-value store server.
 
-    IMPORTANT NOTE: there is nothing special about this client. It could be
-    implemented in any language and still work properly with the KV server. The
-    only requisite is that it can construct and interpret the right type of
-    message (in our case, structured JSON strings).
-    """
 
     def __init__(self, server, port):
         if type(server) != str or type(port) != int or not (0 < port <= 65535):
@@ -54,9 +41,7 @@ class KVClient:
         self.host_port = port
 
     def _connect(self):
-        """
-        Creates a socket connection between this client and a server.
-        """
+
         try:
             self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._sock.connect((self.host_server, self.host_port))
@@ -64,11 +49,7 @@ class KVClient:
             raise Exception(ERRORS["could_not_connect"])
 
     def _listen(self, timeout=None):
-        """
-        Waits for incoming data from this client's socket for a maximum of
-        TIMEOUT seconds, and returns a KVMessage built from it. If no timeout
-        is specified, the socket will listen indefinitely.
-        """
+
         self._sock.settimeout(timeout)
 
         try:
@@ -83,40 +64,31 @@ class KVClient:
         return KVMessage(json_data=data)
 
     def _disconnect(self):
-        """
-        Closes this client's existing connection to a server.
-        """
+
         self._sock.close()
 
     def info(self):
         return self._send_request(INFO, "", "")
 
     def put(self, key, value):
-        """
-        PUTs a KEY and a VALUE to the KV server.
-        """
+
         self._check_key(key)
         self._check_value(value)
         return self._send_request(PUT_REQ, key, value)
 
     def get(self, key):
-        """
-        GETs the value for KEY from the KV server and returns it.
-        """
+
         self._check_key(key)
         return self._send_request(GET_REQ, key)
 
     def delete(self, key):
-        """
-        DELs the value for KEY from the KV server.
-        """
+
         self._check_key(key)
         return self._send_request(DEL_REQ, key)
 
     def _send_request(self, req_type, key, value=None):
-        """
-        Helper function for sending the three different types of request.
-        """
+        #Helper function for sending the three different types of request.
+        
         message = KVMessage(msg_type=req_type, key=key, value=value)
         self._connect()
         message.send(self._sock)
@@ -135,19 +107,14 @@ class KVClient:
 
 
     def _check_key(self, key):
-        """
-        Raises an Exception if KEY is empty or longer than 256 characters.
-        """
+
         if not key:
             raise Exception(ERRORS["invalid_key"])
         if len(key) > 256:
             raise Exception(ERRORS["oversized_key"])
 
     def _check_value(self, value):
-        """
-        Raises an Exception if VALUE is empty or longer than 256*1024
-        characters.
-        """
+
         if not value:
             raise Exception(ERRORS["invalid_value"])
         if len(value) > (256*1024):
@@ -162,11 +129,7 @@ class KVMessage:
 
     def __init__(self, msg_type=None, key=None, value=None, \
                  msg=None, json_data=None):
-        """
-        This constructor must be called in one of two mutually exclusive ways:
-            1) with a msg_type (mandatory) and optional key, value, msg
-            2) with a JSON string (json_data -- incoming data from a connection)
-        """
+
         if json_data:
             self._from_json(json_data)
         else:
@@ -179,9 +142,7 @@ class KVMessage:
         return self._to_json()
 
     def _from_json(self, data):
-        """
-        Populate this message with the data contained in the JSON input string.
-        """
+
         try:
             decoded = json.loads(data)
         except ValueError:
@@ -197,9 +158,7 @@ class KVMessage:
             self.message = decoded["message"]
 
     def _to_json(self):
-        """
-        Convert the data in this KVMessage into a JSON string, and return it.
-        """
+
         d = {"type": self.type}
 
         if self.key:
@@ -212,9 +171,7 @@ class KVMessage:
         return json.dumps(d)
 
     def send(self, sock):
-        """
-        Sends this message to SOCK.
-        """
+
         msg_json = self._to_json()
         size = len(msg_json)
         packer = struct.Struct('I')
