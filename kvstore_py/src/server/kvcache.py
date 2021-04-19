@@ -59,11 +59,9 @@ class KVCache :
         for x in self.cacheSets:
             print(x)
 
-'''   
 a = KVCache(2,1)
-a.KVCachePut("ad",10)
+a.KVCachePut("ad","10")
 b = a.KVCacheGet("ad")
 print(b)
 c = a.KVCacheGetLock("ad")
 print(c)
-'''

@@ -53,7 +53,7 @@ class KVClient:
         self._sock.settimeout(timeout)
 
         try:
-            unpacker = struct.Struct('I')
+            unpacker = struct.Struct('L')
             size = socket.ntohl(unpacker.unpack(self._sock.recv(4))[0])
             data = self._sock.recv(size)
         except Exception as e:
