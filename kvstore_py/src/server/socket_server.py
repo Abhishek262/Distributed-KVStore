@@ -9,11 +9,89 @@
 # kvserver_t kvserver;
 # tpcmaster_t tpcmaster;
 # };
+
 from wq import WorkQueue
+import socket 
+import sys
+import threading
+        
+def connect_to(hostname, port, timeout):
+    try: 
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        # print ("Socket successfully created")
+    except socket.error as err: 
+        print ("socket creation failed with error %s" %(err))    
+
+    try: 
+        host_ip = socket.gethostbyname(hostname) 
+    except socket.gaierror: 
+    
+        # this means could not resolve the host 
+        print ("there was an error resolving the host")
+        sys.exit()  
+
+    if(timeout>0):
+        s.settimeout(timeout)
+
+    try : 
+        s.connect((host_ip, port)) 
+    except : 
+        return -1
+
+    return s 
+
 
 class Server:
-    def __init__():
-
+    def __init__(self):
+        self.KVServer = None 
+        self.TPCMaster = None 
     
     def serverRun(self, hostname, port):
+        self.wq = WorkQueue()
+        self.listening = 1
+        self.port = port 
+        self.hostname = hostname 
+
+        try: 
+            self.sockobj = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+            # print ("Socket successfully created")
+        except socket.error as err: 
+            print ("socket creation failed with error %s" %(err))            
         
+        self.sockobj.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sockobj.bind("",port)
+        self.sockobj.listen(1024)     
+
+    def handle(self):
+        if(self.KVServer !=None):
+            self.KVServer.handle()
+        else:
+            self.TPCMaster.handle()
+
+    # def handleMaster(self):
+    #     pass 
+
+    def handleSlave(self):
+        sockObj = self.wq.pop()
+        self.KVServer.KVServerHandle(sockObj)
+
+
+
+def serverRunHelper(serverObj):
+
+    while(serverObj.listening):
+        clientSock, client_addr = serverObj.sockobj.accept()
+        serverObj.wq.push(clientSock)
+
+        if(serverObj.KVServer !=None):
+            serverObj.KVServer.handle()
+        # else:
+        #     serverObj.TPCMaster.handle()
+    
+
+    
+
+
+
+
+

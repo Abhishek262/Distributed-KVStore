@@ -68,7 +68,7 @@ class KVServer :
         ret  = self.store.KVStoreDelete()
 
         if(ret < 0):
-            return ret 
+            return ret  
         
         lock.acquire()
         self.cache.KVCacheDelete(key)
@@ -127,7 +127,7 @@ class KVServer :
             respmsg.msgType = ErrorCodes.kvMessageType["INFO"]
             respmsg.message = self.KVServerGetInfoMessage()
         else:
-            respmsg.msgType = "RESP"
+            respmsg.msgType = "RESP" 
             respmsg.message = ErrorCodes.notImplementedMessage
         
         return respmsg
