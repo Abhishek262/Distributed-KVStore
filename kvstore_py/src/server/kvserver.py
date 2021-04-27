@@ -82,31 +82,32 @@ class KVServer :
     
     def KVServerHandleNoTPC(self, reqmsg):
         error = -1
+        # print(reqmsg)
         respmsg = KVMessage()
         default = ErrorCodes.getErrorMessage(ErrorCodes.InvalidRequest)
         if(reqmsg.key == ""):
-            if(reqmsg.msgType == ErrorCodes.kvMessageType["GETREQ"] or reqmsg.msgType == ErrorCodes.kvMessageType["PUTREQ"] or reqmsg.msgType == ErrorCodes.kvMessageType["DELREQ"]):
+            if(reqmsg.msgType == ErrorCodes.KVMessageType["GETREQ"] or reqmsg.msgType == ErrorCodes.KVMessageType["PUTREQ"] or reqmsg.msgType == ErrorCodes.KVMessageType["DELREQ"]):
                 respmsg.msgType = "RESP"
                 respmsg.message = default
         
-        elif(reqmsg.value == "" and reqmsg.msgType ==  ErrorCodes.kvMessageType["PUTREQ"]):
+        elif(reqmsg.value == "" and reqmsg.msgType ==  ErrorCodes.KVMessageType["PUTREQ"]):
             respmsg.msgType = "RESP"
             respmsg.message = default
 
         #if(self.state == ErrorCodes.TPCStates["TPC_READY"]):
 
-        elif(reqmsg.msgType == ErrorCodes.kvMessageType["GETREQ"]):
+        elif(reqmsg.msgType == ErrorCodes.KVMessageType["GETREQ"]):
             ret = self.KVServerGet(reqmsg.key)
             if (ret[0] >= 0):
-                respmsg.msgType = ErrorCodes.kvMessageType["GETRESP"]
+                respmsg.msgType = ErrorCodes.KVMessageType["GETRESP"]
                 respmsg.key = reqmsg.key
                 respmsg.value = ret[1]
             else:
                 respmsg.msgType = "RESP"
                 respmsg.message = ErrorCodes.getErrorMessage(ret[0])
             
-        elif(reqmsg.msgType == ErrorCodes.kvMessageType["PUTREQ"]):
-            ret = self.KVServerPut(reqmsg.key)
+        elif(reqmsg.msgType == ErrorCodes.KVMessageType["PUTREQ"]):
+            ret = self.KVServerPut(reqmsg.key,reqmsg.value)
             if (ret >= 0):
                 respmsg.msgType = "RESP"
                 respmsg.value = ErrorCodes.Successmsg
@@ -114,7 +115,7 @@ class KVServer :
                 respmsg.msgType = "RESP"
                 respmsg.message = ErrorCodes.getErrorMessage(ret)
 
-        elif(reqmsg.msgType == ErrorCodes.kvMessageType["DELREQ"]):
+        elif(reqmsg.msgType == ErrorCodes.KVMessageType["DELREQ"]):
             ret = self.KVServerDelete(reqmsg.key)
             if (ret >= 0):
                 respmsg.msgType = "RESP"
@@ -123,8 +124,8 @@ class KVServer :
                 respmsg.msgType = "RESP"
                 respmsg.message = ErrorCodes.getErrorMessage(ret)
             
-        elif(reqmsg.msgType == ErrorCodes.kvMessageType["INFO"]):
-            respmsg.msgType = ErrorCodes.kvMessageType["INFO"]
+        elif(reqmsg.msgType == ErrorCodes.KVMessageType["INFO"]):
+            respmsg.msgType = ErrorCodes.KVMessageType["INFO"]
             respmsg.message = self.KVServerGetInfoMessage()
         else:
             respmsg.msgType = "RESP" 
@@ -134,13 +135,14 @@ class KVServer :
 
     def KVServerHandle(self, sock_obj):  
         messageobj = KVMessage()  
-        reqmsg = messageobj.KVMessageParse(sock_obj)
+        messageobj.KVMessageParse(sock_obj)
+        # print(reqmsg)
         #Maybe Error Handling maybe null
         if self.useTPC is False:
-            self.KVServerHandleNoTPC(reqmsg)
+            self.KVServerHandleNoTPC(messageobj)
         '''
         else:
-            self.KVServerHandleTPC(reqmsg)
+            self.KVServerHandleTPC(messageobj)
         '''
-        messageobj.kvMessageSend(sock_obj)
+        messageobj.KVMessageSend(sock_obj)
 

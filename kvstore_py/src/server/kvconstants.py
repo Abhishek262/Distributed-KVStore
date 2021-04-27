@@ -8,7 +8,7 @@ class ErrorCodes:
     notImplementedMessage = "ERROR: NOT IMPLMENTED"
 
 
-    kvMessageType = {
+    KVMessageType = {
         "GETREQ": 0,
         "PUTREQ": 1,
         "DELREQ": 2,
@@ -31,7 +31,7 @@ class ErrorCodes:
         "TPC_COMMIT": 4
     }
 
-    @classmethod
+    @staticmethod
     def getErrorMessage(error):
         if(error == ErrorCodes.errkeylen):
             return "Error: Improper Key Length"
