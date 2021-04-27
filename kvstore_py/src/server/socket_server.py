@@ -15,7 +15,7 @@ import socket
 import sys
 import threading
         
-def connect_to(hostname, port, timeout):
+def connectTo(hostname, port, timeout):
     try: 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
         # print ("Socket successfully created")

@@ -12,7 +12,7 @@ class WorkQueue:
         new_item = self.queue.get()
         return new_item
 
-b = WorkQueue()
-b.push("a")
-print(b.pop())
+# b = WorkQueue()
+# b.push("a")
+# print(b.pop())
 #print(b.pop())

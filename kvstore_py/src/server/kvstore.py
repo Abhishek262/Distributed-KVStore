@@ -181,11 +181,11 @@ class KVStore():
 
 
 
-a = KVStore("dir")
-a.KVStorePut("ab","hjhjhj")
-print("get")
-print(a.KVStoreGet("ab"))
-print("del")
+# a = KVStore("dir")
+# a.KVStorePut("ab","hjhjhj")
+# print("get")
+# print(a.KVStoreGet("ab"))
+# print("del")
 
-print(a.KVStoreDelete("ab"))
-a.KVStoreClean()
+# print(a.KVStoreDelete("ab"))
+# a.KVStoreClean()
