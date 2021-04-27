@@ -80,9 +80,9 @@ class Server:
 
     def handle(self):
         if(self.KVServer !=None):
-            self.KVServer.handle()
+            self.handleSlave()
         else:
-            self.TPCMaster.handle()
+            self.handleMaster()
 
     # def handleMaster(self):
     #     pass 
@@ -103,8 +103,8 @@ def serverRunHelper(serverObj):
         clientSock, client_addr = serverObj.sockobj.accept()
         serverObj.wq.push(clientSock)
 
-        if(serverObj.KVServer !=None):
-            serverObj.KVServer.handle()
+        #if(serverObj.KVServer !=None):
+        serverObj.handle()
         # else:
         #     serverObj.TPCMaster.handle()
     

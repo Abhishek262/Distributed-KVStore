@@ -7,7 +7,7 @@ usage  = "sage: kvslave [-t] [--tpc] [slave_port (default=9000)] [master_port (d
 
 tpcMode = 0
 slavePort = 9000
-masterPort  = 888
+masterPort  = 8888
 mode = ""
 
 slaveHostName = "localhost"
@@ -24,7 +24,7 @@ args  = parser.parse_args()
 tpcMode = args.t 
 slavePort = args.slave_port
 masterPort = args.master_port
-print(tpcMode,slavePort,masterPort)
+#print(tpcMode,slavePort,masterPort)
 
 if(tpcMode):
     mode = "(tpc)"
