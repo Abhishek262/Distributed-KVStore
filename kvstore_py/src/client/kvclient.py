@@ -174,7 +174,7 @@ class KVMessage:
 
         msg_json = self._to_json()
         size = len(msg_json)
-        packer = struct.Struct('I')
+        packer = struct.Struct('L')
         packed_data = packer.pack(socket.htonl(size))
         sock.sendall(packed_data)
         sock.sendall(self._to_json())

@@ -60,7 +60,7 @@ class Server:
             print ("socket creation failed with error %s" %(err))            
         
         self.sockobj.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sockobj.bind("",port)
+        self.sockobj.bind(("",port))
         self.sockobj.listen(1024)  
         
         #handle the thread part
@@ -68,6 +68,7 @@ class Server:
         for i in range(self.maxThreads):
             t = threading.Thread(target=serverRunHelper,args =(self,))
             threads.append(t)
+            t.start()
             
         for i in range(len(threads)):
             threads[i].join()

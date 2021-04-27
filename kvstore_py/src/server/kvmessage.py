@@ -1,4 +1,4 @@
-import json
+import json, socket
 import struct
 
 class KVMessage:
@@ -29,7 +29,7 @@ class KVMessage:
 
     def kvMessageParse(self, sock_obj): #not sure but s here is socket object
         datasize = struct.calcsize("L")
-        size = struct.unpack("L", self.readblob(sock_obj, datasize))
+        size = socket.ntohl(struct.unpack("L", self.readblob(sock_obj, datasize)))
         data = self.readblob(sock_obj, size)
         temp_dict = json.loads(data.decode('utf-8'))
         
