@@ -42,13 +42,14 @@ def connect_to(hostname, port, timeout):
 
 
 class Server:
-    def __init__(self):
+    def __init__(self,maxThreads = 3):
         self.KVServer = None 
         self.TPCMaster = None 
+        self.maxThreads = maxThreads
     
     def serverRun(self, hostname, port):
         self.wq = WorkQueue()
-        self.listening = 1
+        self.listening = True
         self.port = port 
         self.hostname = hostname 
 
@@ -60,7 +61,21 @@ class Server:
         
         self.sockobj.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sockobj.bind("",port)
-        self.sockobj.listen(1024)     
+        self.sockobj.listen(1024)  
+        
+        #handle the thread part
+        threads = []
+        for i in range(self.maxThreads):
+            t = threading.Thread(target=serverRunHelper,args =(self,))
+            threads.append(t)
+            
+        for i in range(len(threads)):
+            threads[i].join()
+
+        self.sockobj.shutdown(socket.SHUT_RDWR)
+        self.sockobj.close()
+        return 0
+
 
     def handle(self):
         if(self.KVServer !=None):
@@ -75,6 +90,10 @@ class Server:
         sockObj = self.wq.pop()
         self.KVServer.KVServerHandle(sockObj)
 
+    def serverStop(self):
+        self.listening = False
+        self.sockobj.shutdown(socket.SHUT_RDWR)
+        self.sockobj.close()
 
 
 def serverRunHelper(serverObj):
@@ -88,10 +107,4 @@ def serverRunHelper(serverObj):
         # else:
         #     serverObj.TPCMaster.handle()
     
-
-    
-
-
-
-
 
