@@ -54,7 +54,8 @@ class KVClient:
 
         try:
             unpacker = struct.Struct('L')
-            size = socket.ntohl(unpacker.unpack(self._sock.recv(4))[0])
+            arr = self._sock.recv(struct.calcsize("L"))
+            size = socket.ntohl(unpacker.unpack(arr)[0])
             data = self._sock.recv(size)
         except Exception as e:
             raise e
@@ -142,7 +143,7 @@ class KVMessage:
         return self._to_json()
 
     def _from_json(self, data):
-
+        
         try:
             decoded = json.loads(data)
         except ValueError:
