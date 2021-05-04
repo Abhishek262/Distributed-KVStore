@@ -1,2 +1,3 @@
 kv_store_py/src/storage
 __pycache__/
+*.py[cod]
