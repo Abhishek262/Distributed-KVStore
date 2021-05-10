@@ -26,7 +26,7 @@ class KVMessage:
             if not ret:
                 raise Exception("Socket Closed")
             buf += ret
-        return but
+        return buf
 
     def readBin(self, sock_obj, size):
         # print("started")
