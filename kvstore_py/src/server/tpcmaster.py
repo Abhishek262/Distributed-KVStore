@@ -9,6 +9,7 @@ from kvconstants import ErrorCodes
 from pyhash import murmur2_x64_64a
 from kvconstants import ErrorCodes
 from socket_server import connectTo
+import time
 import threading
 
 
@@ -48,7 +49,7 @@ class TPCMaster:
         self.errorMsg = ""
         self.hasher = murmur2_x64_64a(seed = 32)
 
-    def tpcMasterRegister(self,reqmsg):
+    def TPCMasterRegister(self,reqmsg):
 
         respmsg = KVMessage()
         respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
@@ -95,7 +96,7 @@ class TPCMaster:
         self.slaveLock.release()
         return respmsg
 
-    def tpcMasterGetPrimary(self,key):
+    def TPCMasterGetPrimary(self,key):
 
         self.slaveLock.acquire()
         self.slaves.sort(key = retHash)
@@ -123,7 +124,7 @@ class TPCMaster:
 
                 return self.slaves[i+1]
 
-    def tpcMasterHandleGet(self,reqmsg):
+    def TPCMasterHandleGet(self,reqmsg):
 
         respmsg = KVMessage()
         respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
@@ -184,18 +185,38 @@ class TPCMaster:
             
         return respmsg
 
+    def TPCMasterHandleTPC(self, reqmsg):
+        respmsg = KVMessage()
+        self.updateCheckMasterState() 
+        if(reqmsg == None or reqmsg.key == None or self.state == ErrorCodes.TPCStates["TPC_INIT"]):
+            if((reqmsg.msgType != ErrorCodes.KVMessageType["PUTREQ"] and reqmsg.msgType != ErrorCodes.KVMessageType["DELREQ"]) or (reqmsg.msgType == ErrorCodes.KVMessageType["PUTREQ"] and reqmsg.value == NULL)):
+                reqmsg.msgType = ErrorCodes.KVMessageType["RESP"]
+                reqmsg.message = ErrorCodes.getErrorMessage(-1) 
+                return respmsg
 
+        primary_slave = self.TPCMasterGetPrimary(reqmsg.key)        
+        self.state = ErrorCodes.TPCStates["TPC_COMMIT"]
 
+        #for i in range(self.redundancy):
+        #need to finish phase1
 
+    def TPCMasterInfo(self, reqmsg):
+        respmsg = KVMessage()
+        if(reqmsg == None):
+            reqmsg.msgType = ErrorCodes.KVMessageType["RESP"]
+            reqmsg.message = ErrorCodes.getErrorMessage(ErrorCodes.GenericError) 
+            return respmsg    
+        respmsg.msgType = ErrorCodes.KVMessageType["INFO"]
+        
+        localtime = time.asctime( time.localtime(time.time()) )
+        info = localtime + "\n" + "Slaves:\n"
+        
+        self.slaveLock.acquire()
+        for i in range(len(self.slaves)):
+            info += "{"+ i.host + ", " + i.port + "}\n"
+        self.slaveLock.release()
+        respmsg.message = info
+        return respmsg
+    
 
-
-
-
-
-
-
-
-
-
-
-
+    def TPCMasterHandle(self)
