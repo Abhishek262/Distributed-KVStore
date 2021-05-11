@@ -195,10 +195,49 @@ class TPCMaster:
                 return respmsg
 
         primary_slave = self.TPCMasterGetPrimary(reqmsg.key)        
+        iter = primary_slave
         self.state = ErrorCodes.TPCStates["TPC_COMMIT"]
 
-        #for i in range(self.redundancy):
+        for i in range(self.redundancy):
+            self.TPCPhase1(iter,reqmsg)
+            iter = self.tpcMasterGetSuccessor(iter)
         #need to finish phase1
+
+        if(self.state == ErrorCodes.TPCStates["TPC_READY"]):
+            lock = self.cache.KVCacheGetLock(reqmsg.key)
+            if(type(lock)!=int):
+                lock.acquire()
+                if(reqmsg.msgType == ErrorCodes.KVMessageType["PUTREQ"]):
+                    self.cache.KVCachePut(reqmsg.key,reqmsg.value)
+                if(reqmsg.msgType == ErrorCodes.KVMessageType["DELREQ"]):
+                    self.cache.KVCacheDelete(reqmsg.key)
+                else:
+                    print("Invalid request in TPCMaster handler")
+
+            lock.release()
+
+        globalMessage = KVMessage()
+        if(self.state == ErrorCodes.TPCStates["TPC_COMMIT"]):
+            globalMessage.msgType = ErrorCodes.KVMessageType["COMMIT"]
+        else:
+            globalMessage.msgType = ErrorCodes.KVMessageType["ABORT"]
+
+        iter = primary_slave 
+        for i in range(self.redundancy):
+            self.TPCPhase2(iter,globalMessage)
+            iter = self.tpcMasterGetSuccessor(iter)
+
+        respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
+
+        if(self.state == ErrorCodes.TPCStates["TPC_COMMIT"]):
+            respmsg.msgType = ErrorCodes.Successmsg
+        else:
+            respmsg.msgType = self.errMsg
+
+        self.state = ErrorCodes.TPCStates["TPC_READY"]   
+
+        return respmsg  
+        
 
     def TPCMasterInfo(self, reqmsg):
         respmsg = KVMessage()
@@ -270,3 +309,4 @@ class TPCMaster:
             if respmsg.msgType == ErrorCodes.KVMessageType["ACK"] : 
                 break
         sockObj.close()
+
