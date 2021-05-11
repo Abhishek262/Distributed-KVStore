@@ -39,4 +39,6 @@ class ErrorCodes:
             return "Error: Value Too Long"
         if(error == ErrorCodes.keyNotFound):
             return "Error: Key Not Found"
+        if(error == ErrorCodes.InvalidRequest):
+            return "Error: Invalid Request"       
         return "Error: Unable To Process Request"

@@ -6,6 +6,12 @@
 from kvcache import KVCache
 from kvmessage import KVMessage
 from kvconstants import ErrorCodes
+from pyhash import murmur2_x64_64a
+from kvconstants import ErrorCodes
+import threading
+
+def retHash(slave):
+    return slave.id
 
 class TPCSlave:
     def __init__(self):
@@ -26,9 +32,75 @@ class TPCMaster:
         else:
             self.redundancy = slaveCapacity
         
+        #list of slaves
         self.slaves = []
+
+        #self.client_req = KVMessage()
+        #self.errMsg = ""
+        self.slave_lock = threading.lock()
+
         self.sorted = False
         self.state = ErrorCodes.TPCStates["TPC_INIT"]
         self.errorMsg = ""
-    
-    
+        self.hasher = murmur2_x64_64a(seed = 32)
+
+    def tpcMasterRegister(self,reqmsg):
+
+        respmsg = KVMessage()
+        respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
+
+        if(reqmsg.value == None or reqmsg.key == None or reqmsg.value=="" ):
+            respmsg.message = ErrorCodes.getErrorMessage(ErrorCodes.InvalidRequest)
+            return respmsg
+
+        origState = self.state
+        failure = True
+        port = reqmsg.value
+        hostname = reqmsg.key 
+        portlen = len(port)
+        hostname = len(hostname)
+        formatString = port + ":" + hostname
+        hashval = self.hasher(formatString)
+
+        self.slave_lock.acquire()
+
+        for slave in self.slaves : 
+            if(slave.id == hashval):
+                failure = False 
+                self.slave_lock.release()
+                self.state = origState
+                respmsg = None
+                return respmsg
+
+        if(self.slaveCount == self.slaveCapacity):
+            self.slave_lock.release()
+            self.state = origState
+            respmsg = None
+            return respmsg 
+        else:
+            self.slaveCount+=1
+            self.updateCheckMasterState() 
+      
+        slave = TPCSlave()
+        slave.id = hashval
+        slave.host = hostname 
+        slave.port = int(port)
+        self.slaves.append(slave)
+        self.slaves.sort(key = retHash)
+        respmsg.message = ErrorCodes.Successmsg
+        
+        return respmsg
+
+
+
+
+
+
+
+
+
+
+
+
+
+
