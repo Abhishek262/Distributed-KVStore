@@ -259,4 +259,14 @@ class TPCMaster:
             self.state = ErrorCodes.TPCStates["TPC_ABORT"]
             self.errMsg = respmsg.message
         
-    
+    def TPCPhase2(self, slave, reqmsg):
+        sockObj = connectTo(slave.host, slave.port, TPCMaster.timeoutSeconds)
+        if (sockObj == -1):
+            return
+        while(True):
+            reqmsg.KVMessageSend(sockObj)
+            respmsg = KVMessage()
+            respmsg.KVMessageParse(sockObj)
+            if respmsg.msgType == ErrorCodes.KVMessageType["ACK"] : 
+                break
+        sockObj.close()
