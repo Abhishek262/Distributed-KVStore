@@ -37,7 +37,7 @@ class TPCMaster:
 
         #self.client_req = KVMessage()
         #self.errMsg = ""
-        self.slave_lock = threading.lock()
+        self.slaveLock = threading.lock()
 
         self.sorted = False
         self.state = ErrorCodes.TPCStates["TPC_INIT"]
@@ -62,18 +62,18 @@ class TPCMaster:
         formatString = port + ":" + hostname
         hashval = self.hasher(formatString)
 
-        self.slave_lock.acquire()
+        self.slaveLock.acquire()
 
         for slave in self.slaves : 
             if(slave.id == hashval):
                 failure = False 
-                self.slave_lock.release()
+                self.slaveLock.release()
                 self.state = origState
                 respmsg = None
                 return respmsg
 
         if(self.slaveCount == self.slaveCapacity):
-            self.slave_lock.release()
+            self.slaveLock.release()
             self.state = origState
             respmsg = None
             return respmsg 
@@ -88,9 +88,36 @@ class TPCMaster:
         self.slaves.append(slave)
         self.slaves.sort(key = retHash)
         respmsg.message = ErrorCodes.Successmsg
-        
+        self.slaveLock.release()
         return respmsg
 
+    def tpcMasterGetPrimary(self,key):
+
+        self.slaveLock.acquire()
+        self.slaves.sort(key = retHash)
+
+        hashval = self.hasher(key)
+
+        for slave in self.slaves:
+            if(hashval < slave.id):
+                self.slaveLock.release()
+                return slave 
+            
+        self.slaveLock.release()
+        return slave[0]
+    
+    def tpcMasterGetSuccessor(self,predecessor):
+        self.slaveLock.acquire()
+        self.slaves.sort(key = retHash)
+
+        for i in range(0,len(self.slaves)):
+            if(self.slaves[i].id==predecessor.id):
+                self.slaveLock.release()
+
+                if(i==len(self.slaves)-1):
+                    return self.slaves[0]
+
+                return self.slaves[i+1]
 
 
 
