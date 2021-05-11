@@ -8,7 +8,9 @@ from kvmessage import KVMessage
 from kvconstants import ErrorCodes
 from pyhash import murmur2_x64_64a
 from kvconstants import ErrorCodes
+from socket_server import connectTo
 import threading
+
 
 def retHash(slave):
     return slave.id
@@ -20,6 +22,8 @@ class TPCSlave:
         self.port = 0
 
 class TPCMaster:
+
+    timeoutSeconds = 2
 
     def __init__(self, slaveCapacity, redundancy, numCacheSets, cacheSetSize):
 
@@ -118,6 +122,70 @@ class TPCMaster:
                     return self.slaves[0]
 
                 return self.slaves[i+1]
+
+    def tpcMasterHandleGet(self,reqmsg):
+
+        respmsg = KVMessage()
+        respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
+
+        if(reqmsg.value == None or reqmsg.key == None or reqmsg.value=="" ):
+            respmsg.message = ErrorCodes.getErrorMessage(ErrorCodes.InvalidRequest)
+            return respmsg       
+
+        value = ""
+        receivedResponse = KVMessage()
+        lock = self.cache.KVCacheGetLock(reqmsg.key)
+        lock.acquire()
+        cacheGet = self.cache.KVCacheGet(reqmsg.key)
+        if(cacheGet[0]==1):
+            lock.release()
+            respmsg.key = reqmsg.key
+            respmsg.value = cacheGet[1]
+            respmsg.msgType = ErrorCodes.KVMessageType["GETRESP"]
+
+        else:
+            lock.release()
+            slave = self.tpcMasterGetPrimary(reqmsg.key)
+            successfulConnection = False 
+
+            for i in range(0,self.redundancy):
+                fd = connectTo(slave.host,slave.port,TPCMaster.timeoutSeconds)
+                if(fd == -1):
+                    slave = self.tpcMasterGetSuccessor(slave)
+                else:
+                    successfulConnection = True
+                    break
+
+            if(successfulConnection == False):
+                respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
+                respmsg.message = ErrorCodes.getErrorMessage(-1)
+                return respmsg 
+            
+            respmsg.KVMessageSend(fd)
+            receivedResponse.KVMessageParse(fd)
+            fd.close()
+
+            if(receivedResponse.msgType == None):
+                respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
+                respmsg.message = ErrorCodes.getErrorMessage(-1)
+                return respmsg 
+
+            if(receivedResponse.msgType != ErrorCodes.KVMessageType["GETRESP"]):
+                respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
+                respmsg.message = receivedResponse.message
+            else:
+                respmsg.key = receivedResponse.key
+                respmsg.value = receivedResponse.value
+                respmsg.msgType = receivedResponse.msgType
+                respmsg.message = ErrorCodes.Successmsg
+                lock.acquire()
+                self.cache.KVCachePut(respmsg.key,respmsg.value)
+                lock.release()
+            
+        return respmsg
+
+
+
 
 
 

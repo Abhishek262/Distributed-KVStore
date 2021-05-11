@@ -45,7 +45,7 @@ class KVMessage:
         data = self.readBin(sock_obj, size)
         # print("data : ",data)
         temp_dict = json.loads(data.decode('utf-8'))
-        print(temp_dict)
+        # print(temp_dict)
 
         if "key" in temp_dict.keys():
             self.key = temp_dict["key"]
