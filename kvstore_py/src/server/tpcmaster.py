@@ -219,4 +219,27 @@ class TPCMaster:
         return respmsg
     
 
-    def TPCMasterHandle(self)
+    def TPCMasterHandle(self, sockObj):
+        reqmsg = KVMessage()
+        respmsg = KVMessage()
+        reqmsg.KVMessageParse(sockObj)
+        respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
+
+        if reqmsg.key != None or reqmsg.key == "":
+            respmsg.key = reqmsg.key
+
+        #Copy the message?
+        if(reqmsg == None or reqmsg.key == None):
+            respmsg.message = ErrorCodes.getErrorMessage(ErrorCodes.InvalidRequest)
+        elif (reqmsg.msgType == ErrorCodes.KVMessageType["INFO"]):
+            respmsg = self.TPCMasterInfo(reqmsg)
+        elif (reqmsg.msgType == ErrorCodes.KVMessageType["REGISTER"]):
+            respmsg = self.TPCMasterRegister(reqmsg)
+        elif (reqmsg.msgType == ErrorCodes.KVMessageType["GETREQ"]):
+            respmsg = self.TPCMasterHandleGet(reqmsg)
+        else:
+            respmsg = self.TPCMasterHandleTPC(reqmsg)
+        
+        respmsg.KVMessageSend(sockObj)
+    
+    
