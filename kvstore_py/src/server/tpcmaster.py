@@ -41,7 +41,7 @@ class TPCMaster:
         self.slaves = []
 
         #self.client_req = KVMessage()
-        #self.errMsg = ""
+        self.errMsg = ""
         self.slaveLock = threading.lock()
 
         self.sorted = False
@@ -242,4 +242,21 @@ class TPCMaster:
         
         respmsg.KVMessageSend(sockObj)
     
+    def updateCheckMasterState(self):
+        if (self.slaveCount == self.slaveCapacity):
+            self.state = ErrorCodes.TPCStates["TPC_READY"]
+    
+    def TPCPhase1(self, slave, reqmsg):
+        sockObj = connectTo(slave.host, slave.port, TPCMaster.timeoutSeconds)
+        if (sockObj == -1):
+            return
+        reqmsg.KVMessageSend(sockObj)
+        respmsg = KVMessage()
+        respmsg.KVMessageParse(sockObj)
+        sockObj.close()
+
+        if(respmsg == None or respmsg.msgType == ErrorCodes.KVMessageType["VOTE_ABORT"]):
+            self.state = ErrorCodes.TPCStates["TPC_ABORT"]
+            self.errMsg = respmsg.message
+        
     
