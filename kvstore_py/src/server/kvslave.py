@@ -45,11 +45,13 @@ if(tpcMode):
         print(" Error registering slave. Could not connect to master on host", masterHostName, "at port", masterPort)
         exit()
     sockObj = ret[1]
+
     #kvserver_register_master
+    ret = slave.KVServerRegisterMaster(sockObj)
+    if(ret<0):
+        print("Error registering slave with master")
     #error handling
     sockObj.close()
 
 server.KVServer = slave
 server.serverRun(slaveHostName, slavePort)
-
-

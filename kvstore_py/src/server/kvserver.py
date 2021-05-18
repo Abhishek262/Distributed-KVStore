@@ -18,7 +18,6 @@ class KVServer :
         self.useTPC = useTPC
         #self.TPClog = TPClog(dirname)
         self.message = None
-        #self.phase = phase 
 
     #Regsiter server for TPCMaster
     def KVServerRegisterMaster(self,sockObj):
