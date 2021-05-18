@@ -21,7 +21,7 @@ def connectTo(hostname, port, timeout):
         # print ("Socket successfully created")
     except socket.error as err: 
         print ("socket creation failed with error %s" %(err)) 
-        return -1   
+        return tuple([-1,None])   
 
     try: 
         host_ip = socket.gethostbyname(hostname) 
@@ -37,9 +37,9 @@ def connectTo(hostname, port, timeout):
     try : 
         s.connect((host_ip, port)) 
     except : 
-        return -1
+        return tuple([-1,None])   
 
-    return s 
+    return tuple([1,s]) 
 
 
 class Server:

@@ -150,10 +150,12 @@ class TPCMaster:
             successfulConnection = False 
 
             for i in range(0,self.redundancy):
-                fd = connectTo(slave.host,slave.port,TPCMaster.timeoutSeconds)
-                if(fd == -1):
+                ret = connectTo(slave.host,slave.port,TPCMaster.timeoutSeconds)
+                fd = ret[1]
+                if(ret[0] < 0):
                     slave = self.tpcMasterGetSuccessor(slave)
                 else:
+                    
                     successfulConnection = True
                     break
 
@@ -185,25 +187,28 @@ class TPCMaster:
             
         return respmsg
 
+
+    #Check if GET req can come at the same time as the processing of a PUT req is happening.
     def TPCMasterHandleTPC(self, reqmsg):
         respmsg = KVMessage()
         self.updateCheckMasterState() 
-        if(reqmsg == None or reqmsg.key == None or self.state == ErrorCodes.TPCStates["TPC_INIT"]):
-            if((reqmsg.msgType != ErrorCodes.KVMessageType["PUTREQ"] and reqmsg.msgType != ErrorCodes.KVMessageType["DELREQ"]) or (reqmsg.msgType == ErrorCodes.KVMessageType["PUTREQ"] and reqmsg.value == NULL)):
+        if(reqmsg == None or reqmsg.key == None):
+            if((reqmsg.msgType != ErrorCodes.KVMessageType["PUTREQ"] and reqmsg.msgType != ErrorCodes.KVMessageType["DELREQ"]) or (reqmsg.msgType == ErrorCodes.KVMessageType["PUTREQ"] and reqmsg.value == None)):
                 reqmsg.msgType = ErrorCodes.KVMessageType["RESP"]
                 reqmsg.message = ErrorCodes.getErrorMessage(-1) 
                 return respmsg
 
         primary_slave = self.TPCMasterGetPrimary(reqmsg.key)        
         iter = primary_slave
-        self.state = ErrorCodes.TPCStates["TPC_COMMIT"]
 
         for i in range(self.redundancy):
             self.TPCPhase1(iter,reqmsg)
+            if(self.state == ErrorCodes.TPCStates["TPC_ABORT"]): 
+                break               
             iter = self.tpcMasterGetSuccessor(iter)
         #need to finish phase1
 
-        if(self.state == ErrorCodes.TPCStates["TPC_READY"]):
+        if(self.state == ErrorCodes.TPCStates["TPC_COMMIT"]):
             lock = self.cache.KVCacheGetLock(reqmsg.key)
             if(type(lock)!=int):
                 lock.acquire()
@@ -227,14 +232,14 @@ class TPCMaster:
             self.TPCPhase2(iter,globalMessage)
             iter = self.tpcMasterGetSuccessor(iter)
 
-        respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
+        respmsg.msgType = ErrorCodes.KVbreakMessageType["RESP"]
 
         if(self.state == ErrorCodes.TPCStates["TPC_COMMIT"]):
             respmsg.msgType = ErrorCodes.Successmsg
         else:
             respmsg.msgType = self.errMsg
 
-        self.state = ErrorCodes.TPCStates["TPC_READY"]   
+        self.state = ErrorCodes.TPCStates["TPC_INIT"]   
 
         return respmsg  
         
@@ -283,25 +288,29 @@ class TPCMaster:
     
     def updateCheckMasterState(self):
         if (self.slaveCount == self.slaveCapacity):
-            self.state = ErrorCodes.TPCStates["TPC_READY"]
+            self.state = ErrorCodes.TPCStates["TPC_INIT"]
     
     def TPCPhase1(self, slave, reqmsg):
-        sockObj = connectTo(slave.host, slave.port, TPCMaster.timeoutSeconds)
-        if (sockObj == -1):
+        ret = connectTo(slave.host, slave.port, TPCMaster.timeoutSeconds)
+        if (ret[0] < 0):
             return
+        sockObj = ret[1]
         reqmsg.KVMessageSend(sockObj)
         respmsg = KVMessage()
         respmsg.KVMessageParse(sockObj)
         sockObj.close()
 
-        if(respmsg == None or respmsg.msgType == ErrorCodes.KVMessageType["VOTE_ABORT"]):
+        self.state = ErrorCodes.TPCStates["TPC_COMMIT"]
+
+        if(respmsg.message == None or respmsg.message == "" or respmsg.msgType == ErrorCodes.KVMessageType["VOTE_ABORT"]):
             self.state = ErrorCodes.TPCStates["TPC_ABORT"]
             self.errMsg = respmsg.message
         
     def TPCPhase2(self, slave, reqmsg):
-        sockObj = connectTo(slave.host, slave.port, TPCMaster.timeoutSeconds)
-        if (sockObj == -1):
+        ret = connectTo(slave.host, slave.port, TPCMaster.timeoutSeconds)
+        if (ret[0] < 0):
             return
+        sockObj = ret[1]
         while(True):
             reqmsg.KVMessageSend(sockObj)
             respmsg = KVMessage()

@@ -40,10 +40,11 @@ slave = KVServer(slaveName,4, 4, 2, slaveHostName, slavePort, tpcMode)
 server = Server(3) #maxthreads
 
 if(tpcMode):
-    sockObj = connectTo(masterHostName, masterPort, 0)
-    if( sockObj < 0):
+    ret = connectTo(masterHostName, masterPort, 0)
+    if( ret[0] < 0):
         print(" Error registering slave. Could not connect to master on host", masterHostName, "at port", masterPort)
         exit()
+    sockObj = ret[1]
     #kvserver_register_master
     #error handling
     sockObj.close()
