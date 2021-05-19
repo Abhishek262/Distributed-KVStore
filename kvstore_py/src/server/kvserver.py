@@ -28,7 +28,7 @@ class KVServer :
         reqmsg.KVMessageSend(sockObj)
 
         respmsg = KVMessage()
-        respmsg.KVMessageParse()
+        respmsg.KVMessageParse(sockObj)
     
         if(respmsg.message== None or respmsg.message != ErrorCodes.Successmsg):
             return -1 

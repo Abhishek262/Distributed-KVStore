@@ -63,9 +63,7 @@ class TPCMaster:
         port = reqmsg.value
         hostname = reqmsg.key 
         portlen = len(port)
-        hostname = len(hostname)
-        print("TPC"+port)
-        print(hostname)
+        hostlen = len(hostname)
         formatString = str(port) + ":" + hostname
         hashval = self.hasher(formatString)
 

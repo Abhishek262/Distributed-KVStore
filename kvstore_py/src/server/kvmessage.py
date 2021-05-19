@@ -41,7 +41,7 @@ class KVMessage:
         datasize = struct.calcsize("L")
         size = struct.unpack("L", self.readBin(sock_obj, datasize))
         size = socket.ntohl(size[0])
-        print("Parse",size)
+        # print("Parse",size)
         data = self.readBin(sock_obj, size)
         # print("data : ",data)
         temp_dict = json.loads(data.decode('utf-8'))
@@ -84,7 +84,6 @@ class KVMessage:
         
         
         jdata = json.dumps(temp_dict).encode('utf-8')
-        print("kvmessage",len(jdata))
         size = socket.htonl(len(jdata))
         sock_obj.sendall(struct.pack("L", size))
         sock_obj.sendall(jdata)
