@@ -109,7 +109,7 @@ class TPCMaster:
                 return slave 
             
         self.slaveLock.release()
-        return slave[0]
+        return self.slaves[0]
     
     def tpcMasterGetSuccessor(self,predecessor):
         self.slaveLock.acquire()
@@ -238,15 +238,14 @@ class TPCMaster:
         respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
 
         if(self.state == ErrorCodes.TPCStates["TPC_COMMIT"]):
-            respmsg.msgType = ErrorCodes.Successmsg
+            respmsg.message = ErrorCodes.Successmsg
         else:
-            respmsg.msgType = self.errMsg
+            respmsg.message = self.errMsg
 
         self.state = ErrorCodes.TPCStates["TPC_INIT"]   
-
+    
         return respmsg  
         
-
     def TPCMasterInfo(self, reqmsg):
         respmsg = KVMessage()
         if(reqmsg == None):

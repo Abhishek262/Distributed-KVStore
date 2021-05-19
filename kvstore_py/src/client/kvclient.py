@@ -96,6 +96,8 @@ class KVClient:
         response = self._listen()
         self._disconnect()
 
+        # print("rsp:",response.type)
+
         if response.type == GET_RESP:
             return response.value
         elif req_type == INFO:
