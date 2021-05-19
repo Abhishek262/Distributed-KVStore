@@ -156,13 +156,15 @@ class KVServer :
     def KVServerHandleTPC(self,reqmsg):
         respmsg = KVMessage()
         default = ErrorCodes.getErrorMessage(ErrorCodes.InvalidRequest)
-        if(reqmsg.key == ""):
-            if(reqmsg.msgType == ErrorCodes.KVMessageType["GETREQ"] or reqmsg.msgType == ErrorCodes.KVMessageType["PUTREQ"] or reqmsg.msgType == ErrorCodes.KVMessageType["DELREQ"]):
-                respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
-                respmsg.message = default
-            elif(reqmsg.msgType == ErrorCodes.KVMessageType["INFO"]):
+        # print(reqmsg.key,reqmsg.value,reqmsg.msgType)
+
+        if(reqmsg.key == "" and (reqmsg.msgType == ErrorCodes.KVMessageType["GETREQ"] or reqmsg.msgType == ErrorCodes.KVMessageType["PUTREQ"] or reqmsg.msgType == ErrorCodes.KVMessageType["DELREQ"])):
+            if(reqmsg.msgType == ErrorCodes.KVMessageType["INFO"]):
                 respmsg.msgType = ErrorCodes.KVMessageType["INFO"]
                 respmsg.message = self.KVServerGetInfoMessage()
+            else:
+                respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
+                respmsg.message = default
         
         elif(reqmsg.value == "" and reqmsg.msgType ==  ErrorCodes.KVMessageType["PUTREQ"]):
             respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
@@ -199,7 +201,7 @@ class KVServer :
                 respmsg.message = default
 
             #tpclog()
-            if(self.KVServerDeleteCheck(reqmsg.key,reqmsg.value)==1):
+            if(self.KVServerDeleteCheck(reqmsg.key)==1):
                 self.copyAndStoreKVMessage(reqmsg)
                 respmsg.msgType = ErrorCodes.KVMessageType["VOTE_COMMIT"]
             
@@ -211,18 +213,18 @@ class KVServer :
         elif(reqmsg.msgType == ErrorCodes.KVMessageType["COMMIT"]):
             self.state = ErrorCodes.TPCStates["TPC_READY"]
             #tpclog()
-
+            # print("in commit")
             if(self.message.msgType == ErrorCodes.KVMessageType["PUTREQ"]):
-                ret = self.KVServerPut(reqmsg.key,reqmsg.value)
+                ret = self.KVServerPut(self.message.key,self.message.value)
                 if(ret<0):
                     respmsg.msgType = ErrorCodes.KVMessageType["ACK"]
-                    print("ACK")
+                    # print("ACK")
                     respmsg.message = default
                 else:
                     respmsg.msgType = ErrorCodes.KVMessageType["ACK"]
 
             if(self.message.msgType == ErrorCodes.KVMessageType["DELREQ"]):
-                ret = self.KVServerDelete(reqmsg.key,reqmsg.value)
+                ret = self.KVServerDelete(self.message.key)
                 if(ret<0):
                     respmsg.msgType = ErrorCodes.KVMessageType["ACK"]
                     respmsg.message = default

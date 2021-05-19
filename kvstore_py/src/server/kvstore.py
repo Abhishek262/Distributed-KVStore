@@ -135,7 +135,7 @@ class KVStore():
             return ret
 
         if(self.put_entry(key,value)) : 
-            print("key inserted")
+            print("key inserted " + self.dirname)
             return 1
         else : 
             print("Error during put")

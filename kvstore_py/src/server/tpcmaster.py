@@ -210,11 +210,11 @@ class TPCMaster:
         
         if(self.state == ErrorCodes.TPCStates["TPC_COMMIT"]):
             lock = self.cache.KVCacheGetLock(reqmsg.key)
-            #print(reqmsg.msgType, reqmsg.value, reqmsg.key)
+            # print(reqmsg.msgType, reqmsg.value, reqmsg.key)
             if(type(lock)!=int):
                 lock.acquire()
                 if(reqmsg.msgType == ErrorCodes.KVMessageType["PUTREQ"]):
-                    #print(type(reqmsg.msgType), type(ErrorCodes.KVMessageType["PUTREQ"]))
+                    # print(type(reqmsg.msgType), type(ErrorCodes.KVMessageType["PUTREQ"]))
                     self.cache.KVCachePut(reqmsg.key,reqmsg.value)
                 elif(reqmsg.msgType == ErrorCodes.KVMessageType["DELREQ"]):
                     self.cache.KVCacheDelete(reqmsg.key)
@@ -226,6 +226,7 @@ class TPCMaster:
         globalMessage = KVMessage()
         if(self.state == ErrorCodes.TPCStates["TPC_COMMIT"]):
             globalMessage.msgType = ErrorCodes.KVMessageType["COMMIT"]
+
         else:
             globalMessage.msgType = ErrorCodes.KVMessageType["ABORT"]
 
@@ -234,7 +235,7 @@ class TPCMaster:
             self.TPCPhase2(iter,globalMessage)
             iter = self.tpcMasterGetSuccessor(iter)
 
-        respmsg.msgType = ErrorCodes.KVbreakMessageType["RESP"]
+        respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
 
         if(self.state == ErrorCodes.TPCStates["TPC_COMMIT"]):
             respmsg.msgType = ErrorCodes.Successmsg
@@ -315,6 +316,7 @@ class TPCMaster:
         sockObj = ret[1]
         while(True):
             reqmsg.KVMessageSend(sockObj)
+            # print(reqmsg.key,reqmsg.value,reqmsg.msgType)
             respmsg = KVMessage()
             respmsg.KVMessageParse(sockObj)
             if respmsg.msgType == ErrorCodes.KVMessageType["ACK"] : 
