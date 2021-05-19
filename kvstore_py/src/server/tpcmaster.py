@@ -42,7 +42,7 @@ class TPCMaster:
 
         #self.client_req = KVMessage()
         self.errMsg = ""
-        self.slaveLock = threading.lock()
+        self.slaveLock = threading.Lock()
 
         self.sorted = False
         self.state = ErrorCodes.TPCStates["TPC_INIT"]
@@ -64,7 +64,9 @@ class TPCMaster:
         hostname = reqmsg.key 
         portlen = len(port)
         hostname = len(hostname)
-        formatString = port + ":" + hostname
+        print("TPC"+port)
+        print(hostname)
+        formatString = str(port) + ":" + hostname
         hashval = self.hasher(formatString)
 
         self.slaveLock.acquire()

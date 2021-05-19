@@ -85,8 +85,9 @@ class Server:
         else:
             self.handleMaster()
 
-    # def handleMaster(self):
-    #     pass 
+    def handleMaster(self):
+        sockObj = self.wq.pop()
+        self.TPCMaster.TPCMasterHandle(sockObj)
 
     def handleSlave(self):
         sockObj = self.wq.pop()
@@ -103,10 +104,5 @@ def serverRunHelper(serverObj):
     while(serverObj.listening):
         clientSock, client_addr = serverObj.sockobj.accept()
         serverObj.wq.push(clientSock)
-
-        #if(serverObj.KVServer !=None):
         serverObj.handle()
-        # else:
-        #     serverObj.TPCMaster.handle()
-    
 

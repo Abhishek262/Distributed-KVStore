@@ -23,8 +23,8 @@ class KVServer :
     def KVServerRegisterMaster(self,sockObj):
         reqmsg = KVMessage()
         reqmsg.msgType = ErrorCodes.KVMessageType["REGISTER"]
-        reqmsg.key = self.hostname
-        reqmsg.value = int(self.port)
+        reqmsg.key = self.hostname       
+        reqmsg.value = str(self.port)
         reqmsg.KVMessageSend(sockObj)
 
         respmsg = KVMessage()
