@@ -42,19 +42,23 @@ class KVServer :
         if lock == None:
             return ErrorCodes.errkeylen
         lock.acquire()
-        val = self.cache.KVCacheGet(key)
+        val = self.cache.KVCacheGet(key) 
         if val[0] >= 0:
             lock.release()
+            #returns tuple (in cache)
             return val 
         lock.release()
 
         val = self.store.KVStoreGet(key)
         if val[0]<0 :
+            #error tuple
             return val
         lock.acquire()
         ret = self.cache.KVCachePut(key,val[1])
+        if(ret!=1):
+            return tuple([-1,"Put unsuccessful"])
         lock.release()
-        return ret
+        return val
         #check put() in kvcacheset
 
     def KVServerPutCheck(self,key,value):
@@ -156,7 +160,6 @@ class KVServer :
     def KVServerHandleTPC(self,reqmsg):
         respmsg = KVMessage()
         default = ErrorCodes.getErrorMessage(ErrorCodes.InvalidRequest)
-        # print(reqmsg.key,reqmsg.value,reqmsg.msgType)
 
         if(reqmsg.key == "" and (reqmsg.msgType == ErrorCodes.KVMessageType["GETREQ"] or reqmsg.msgType == ErrorCodes.KVMessageType["PUTREQ"] or reqmsg.msgType == ErrorCodes.KVMessageType["DELREQ"])):
             if(reqmsg.msgType == ErrorCodes.KVMessageType["INFO"]):

@@ -129,8 +129,9 @@ class TPCMaster:
         respmsg = KVMessage()
         respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
 
-        if(reqmsg.value == None or reqmsg.key == None or reqmsg.value=="" ):
+        if(reqmsg.value == None or reqmsg.key == None ):
             respmsg.message = ErrorCodes.getErrorMessage(ErrorCodes.InvalidRequest)
+            # print("here in error")
             return respmsg       
 
         value = ""
@@ -146,7 +147,7 @@ class TPCMaster:
 
         else:
             lock.release()
-            slave = self.tpcMasterGetPrimary(reqmsg.key)
+            slave = self.TPCMasterGetPrimary(reqmsg.key)
             successfulConnection = False 
 
             for i in range(0,self.redundancy):
@@ -160,10 +161,14 @@ class TPCMaster:
                     break
 
             if(successfulConnection == False):
+
                 respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
                 respmsg.message = ErrorCodes.getErrorMessage(-1)
                 return respmsg 
             
+            respmsg.msgType = ErrorCodes.KVMessageType["GETREQ"]
+            respmsg.key = reqmsg.key
+            respmsg.value =  ""
             respmsg.KVMessageSend(fd)
             receivedResponse.KVMessageParse(fd)
             fd.close()
@@ -258,8 +263,8 @@ class TPCMaster:
         info = localtime + "\n" + "Slaves:\n"
         
         self.slaveLock.acquire()
-        for i in range(len(self.slaves)):
-            info += "{"+ i.host + ", " + i.port + "}\n"
+        for i in self.slaves:
+            info += "{"+ str(i.host) + ", " + str(i.port) + "}\n"
         self.slaveLock.release()
         respmsg.message = info
         return respmsg
