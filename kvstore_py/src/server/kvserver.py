@@ -215,7 +215,8 @@ class KVServer :
             if(self.message.msgType == ErrorCodes.KVMessageType["PUTREQ"]):
                 ret = self.KVServerPut(reqmsg.key,reqmsg.value)
                 if(ret<0):
-                    respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
+                    respmsg.msgType = ErrorCodes.KVMessageType["ACK"]
+                    print("ACK")
                     respmsg.message = default
                 else:
                     respmsg.msgType = ErrorCodes.KVMessageType["ACK"]
@@ -223,7 +224,7 @@ class KVServer :
             if(self.message.msgType == ErrorCodes.KVMessageType["DELREQ"]):
                 ret = self.KVServerDelete(reqmsg.key,reqmsg.value)
                 if(ret<0):
-                    respmsg.msgType = ErrorCodes.KVMessageType["RESP"]
+                    respmsg.msgType = ErrorCodes.KVMessageType["ACK"]
                     respmsg.message = default
                 else:
                     respmsg.msgType = ErrorCodes.KVMessageType["ACK"]      
@@ -246,7 +247,7 @@ class KVServer :
             self.message.key = msg.key
         else : 
             self.message.key = ""
-            
+
         if(msg.value!=None or msg.value!=""):
             self.message.value = msg.value 
         else : 
@@ -259,11 +260,12 @@ class KVServer :
         messageobj.KVMessageParse(sock_obj)
         # print(reqmsg)
         #Maybe Error Handling maybe null
+        #respmsg = KVMessage()
         if self.useTPC is False:
             respmsg = self.KVServerHandleNoTPC(messageobj)
         
         else:
-            self.KVServerHandleTPC(messageobj)
+            respmsg = self.KVServerHandleTPC(messageobj)
         
         respmsg.KVMessageSend(sock_obj)
 
