@@ -78,7 +78,8 @@ class KVCacheSet:
 
         if self.end == node:
             self.end = node.prev
-            self.end.next = None
+            if self.end:
+                self.end.next = None
         return node
 
     def setHead(self, node):
@@ -109,7 +110,9 @@ class KVCacheSet:
         for kh,vh in self.hashmap.items():
             print("K:",kh, " V: ",vh.value)
 
-#a = KVCacheSet(10)
-#a.put("ad",10)
+# a = KVCacheSet(10)
+# a.put("ad",10)
+# print(a.get("ad"))
+# print(a.delete("ad"))
 # print(a.get("ad"))
 # a.printCacheElements()
