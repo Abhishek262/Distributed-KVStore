@@ -94,9 +94,10 @@ class KVClient:
         self._connect()
         message.send(self._sock)
         response = self._listen()
+        print("response : ",response.type)
         self._disconnect()
 
-        # print("rsp:",response.type)
+        print("rsp:",response.type)
 
         if response.type == GET_RESP:
             return response.value

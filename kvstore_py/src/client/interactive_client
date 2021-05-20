@@ -58,6 +58,6 @@ if __name__ == "__main__":
                     pass
             except EOFError:
                 exit(0)
-            except Exception as e:
-                print("Error: " + str(e))
+            # except Exception as e:
+            #     print("Error: " + str(e))
     cli()

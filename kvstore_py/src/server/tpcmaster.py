@@ -195,6 +195,8 @@ class TPCMaster:
 
     #Check if GET req can come at the same time as the processing of a PUT req is happening.
     def TPCMasterHandleTPC(self, reqmsg):
+        TPClock = threading.Lock()
+        TPClock.acquire()
         respmsg = KVMessage()
         self.updateCheckMasterState() 
         if(reqmsg == None or reqmsg.key == None):
@@ -245,10 +247,15 @@ class TPCMaster:
         if(self.state == ErrorCodes.TPCStates["TPC_COMMIT"]):
             respmsg.message = ErrorCodes.Successmsg
         else:
-            respmsg.message = self.errMsg
+            respmsg.message = ErrorCodes.getErrorMessage(ErrorCodes.InvalidRequest)
+
+        print("req in TPC  :",self.state)
 
         self.state = ErrorCodes.TPCStates["TPC_INIT"]   
     
+        print("resp in TPC : ",respmsg.msgType," ",respmsg.message)
+        TPClock.release()
+
         return respmsg  
         
     def TPCMasterInfo(self, reqmsg):
@@ -289,12 +296,14 @@ class TPCMaster:
         elif (reqmsg.msgType == ErrorCodes.KVMessageType["GETREQ"]):
             respmsg = self.TPCMasterHandleGet(reqmsg)
         else:
+
             respmsg = self.TPCMasterHandleTPC(reqmsg)
         
         respmsg.KVMessageSend(sockObj)
     
     def updateCheckMasterState(self):
         if (self.slaveCount == self.slaveCapacity):
+            print("init")
             self.state = ErrorCodes.TPCStates["TPC_INIT"]
     
     def TPCPhase1(self, slave, reqmsg):
