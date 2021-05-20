@@ -46,8 +46,11 @@ class TPCMaster:
 
         self.sorted = False
         self.state = ErrorCodes.TPCStates["TPC_INIT"]
+        # print("init 1")
         self.errorMsg = ""
         self.hasher = murmur2_x64_64a(seed = 32)
+        self.TPClock = threading.Lock()
+
 
     def TPCMasterRegister(self,reqmsg):
 
@@ -195,8 +198,7 @@ class TPCMaster:
 
     #Check if GET req can come at the same time as the processing of a PUT req is happening.
     def TPCMasterHandleTPC(self, reqmsg):
-        TPClock = threading.Lock()
-        TPClock.acquire()
+        self.TPClock.acquire()
         respmsg = KVMessage()
         self.updateCheckMasterState() 
         if(reqmsg == None or reqmsg.key == None):
@@ -250,11 +252,10 @@ class TPCMaster:
             respmsg.message = ErrorCodes.getErrorMessage(ErrorCodes.InvalidRequest)
 
         print("req in TPC  :",self.state)
-
         self.state = ErrorCodes.TPCStates["TPC_INIT"]   
     
         print("resp in TPC : ",respmsg.msgType," ",respmsg.message)
-        TPClock.release()
+        self.TPClock.release()
 
         return respmsg  
         
@@ -303,7 +304,7 @@ class TPCMaster:
     
     def updateCheckMasterState(self):
         if (self.slaveCount == self.slaveCapacity):
-            print("init")
+            # print("init 2")
             self.state = ErrorCodes.TPCStates["TPC_INIT"]
     
     def TPCPhase1(self, slave, reqmsg):
