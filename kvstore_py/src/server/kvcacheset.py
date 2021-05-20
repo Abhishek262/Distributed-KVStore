@@ -17,7 +17,7 @@ class KVCacheSet:
             raise ValueError("Size <= 0")
         self.hashmap = dict()
         self.head = None
-        self.tail = None
+        self.end = None
         self.size = cacheSize
         self.curr_size = 0
         self.lock = threading.Lock()
@@ -50,7 +50,7 @@ class KVCacheSet:
         else:
             new_node = Node(key, value)
             if self.curr_size == self.size:
-                self.remove(self.tail)
+                self.remove(self.end)
             self.setHead(new_node)
             self.hashmap[key] = new_node
         # self.lock.release()
@@ -63,6 +63,8 @@ class KVCacheSet:
         # self.lock.release()
 
     def remove(self, node):
+        if node == None:
+            return
         if not self.head:   
             return
 
@@ -74,7 +76,7 @@ class KVCacheSet:
         
         if (not node.prev) and (not node.next):
             self.head = None
-            self.tail = None
+            self.end = None
 
         if self.end == node:
             self.end = node.prev
