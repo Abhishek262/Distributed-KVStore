@@ -1,6 +1,7 @@
 import json, socket
 import struct
-
+import time
+import random
 
 # Used for KVMessage types and messages
 GET_REQ = 0
@@ -28,6 +29,7 @@ ERRORS = {
     "timeout": "Network Error: Socket timeout",
 }
 
+client_id = str(random.randint(0,100000))
 
 
 class KVClient:
@@ -92,12 +94,18 @@ class KVClient:
         
         message = KVMessage(msg_type=req_type, key=key, value=value)
         self._connect()
+
+
+        startTime = time.time()
         message.send(self._sock)
         response = self._listen()
-        print("response : ",response.type)
-        self._disconnect()
+        endTime = time.time()
+        # print("response : ",response.type)
+        self._disconnect()  
 
-        print("rsp:",response.type)
+        with open("results","a") as fp:
+            fp.write(str(startTime)+","+str(endTime)+":"+client_id+"\n")
+        # print("rsp:",response.type)
 
         if response.type == GET_RESP:
             return response.value
@@ -105,8 +113,9 @@ class KVClient:
             return response.message
         elif response.type != RESP:
             raise Exception(ERRORS["generic"])
-        elif response.message != "SUCCESS":
-            raise Exception(response.message)
+        # elif response.message != "SUCCESS":
+            # print(response.message)
+            # raise Exception(response.message)
         return response.message
 
 

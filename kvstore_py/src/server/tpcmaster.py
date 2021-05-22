@@ -251,10 +251,10 @@ class TPCMaster:
         else:
             respmsg.message = ErrorCodes.getErrorMessage(ErrorCodes.InvalidRequest)
 
-        print("req in TPC  :",self.state)
+        # print("req in TPC  :",self.state)
         self.state = ErrorCodes.TPCStates["TPC_INIT"]   
     
-        print("resp in TPC : ",respmsg.msgType," ",respmsg.message)
+        # print("resp in TPC : ",respmsg.msgType," ",respmsg.message)
         self.TPClock.release()
 
         return respmsg  
