@@ -1,39 +1,30 @@
-HP-Project
-============
+Distributed key-value Store Database systems
+================================================
 
-Main project links : 2012 web archives
--------------------------------------------
+* A key-value store is a database that stores data as a collection of key-value pairs. Here, each key serves as a unique identifier.
+* A distributed key-value store system with three simple operations: get, put, and delete is implemented. 
+* Consistent Hashing is used to redirect requests to its appropriate server.
+* Two-phase commit logic will be used to ensure consistency between servers and the operations put and delete are atomic guaranteed via TPC protocol.
+* Replication on multiple servers is used for fault tolerance.
 
-https://www-inst.eecs.berkeley.edu//~cs162/fa12/phase3.html
-https://www-inst.eecs.berkeley.edu//~cs162/fa12/phase4.html
-
-
-General Information on key value store systems 
------------------------------------------------
-
-
- * 1 : http://blog.gainlo.co/index.php/2016/06/14/design-a-key-value-store-part-i/?utm_source=quora&utm_medium=What%20are%20good%20ways%20to%20design%20a%20distributed%20key-value%20store%20%3F&utm_campaign=quora
- * 2 : http://blog.gainlo.co/index.php/2016/06/21/design-key-value-store-part-ii/?utm_source=quora&utm_medium=What%20are%20good%20ways%20to%20design%20a%20distributed%20key-value%20store%20%3F&utm_campaign=quora
-
-
-Project code in java : 
------------------------
-
-[ https://github.com/jwon/CS162-Project-4-Group-28/blob/master/src/edu/berkeley/cs162/KVCache.java
-
-
-Project code in java 2 :
---------------------------
-https://github.com/baugarten/cs162/blob/master/proj3/src/edu/berkeley/cs162/KVCache.java
- 
-Project code in C : 
+System Architecture
 ---------------------
-https://github.com/conradshiao/KVStore
 
-PDF with project info : 
------------------------------
-[ https://inst.eecs.berkeley.edu/~cs162/su15/static/projects/project3.pdf
+![System Architecture](docs/sysarch.png)
 
+KVCache and KVStore
+--------------------
 
-GitBook : 
-https://berkeley-cs162.gitbook.io/hw-6/tcp/references/two-phase-commit
+KVCache represents the key component to perform concurrent GET operations.A KVCache is specific to a server. Each Cache comprises of various cacheSets which allow for concurrent operations. Each cacheSet, however is an LRU cache which supports sequential operations.
+
+KVStore defines the persistent storage used by a server to store (key, value) entries.
+Each entry  is stored as an individual file, all kept in a directory name that is passed upon initialisation.
+
+How To Run
+------------
+
+./run.sh in server consists of the start script to spawn the master and slave servers. The number of slave servers to be spawned needs to be specified in the script.
+
+./interactive_client starts up a client on which the various operations are performed.
+
+Running ./run.sh and then the interactive client would be sufficient to start up the project.
